@@ -98,13 +98,22 @@ with st.sidebar:
         platform_cost = st.number_input("E-commerce Platform (£)", min_value=0.0, value=228.0, step=10.0)
         insurance_cost = st.number_input("Corporate Insurance (£)", min_value=0.0, value=750.0, step=50.0)
         marketing_cost = st.number_input("Digital Marketing (£)", min_value=0.0, value=6000.0, step=500.0)
-        shipping_supplies_cost = st.number_input("Shipping Supplies (£)", min_value=0.0, value=1200.0, step=100.0)
     
     with col2:
         domain_cost = st.number_input("Domain & Hosting (£)", min_value=0.0, value=30.0, step=5.0)
         caa_cost = st.number_input("CAA Renewal (£)", min_value=0.0, value=11.79, step=1.0)
         repairs_cost = st.number_input("Repairs & Maintenance (£)", min_value=0.0, value=295.60, step=10.0)
-        shipping_cost = st.number_input("Shipping Cost per Rental (£)", min_value=0.0, value=32.0, step=1.0)
+    
+    # Shipping costs per rental
+    st.markdown("**Shipping Costs per Rental:**")
+    shipping_col1, shipping_col2 = st.columns(2)
+    with shipping_col1:
+        shipping_cost = st.number_input("Postage Cost per Rental (£)", min_value=0.0, value=32.0, step=1.0)
+    with shipping_col2:
+        box_cost = st.number_input("Cardboard Box per Order (£)", min_value=0.0, value=1.51, step=0.1)
+    
+    total_shipping_cost_per_rental = shipping_cost + box_cost
+    st.markdown(f"**Total Shipping Cost per Rental: £{total_shipping_cost_per_rental:.2f}** (Postage: £{shipping_cost:.2f} + Box: £{box_cost:.2f})")
     
     processing_fee = st.number_input("Payment Processing Fee (%)", min_value=0.0, value=1.5, step=0.1)
 
@@ -209,7 +218,7 @@ def calculate_financials():
     additional_costs_total = sum(cost["amount"] for cost in st.session_state.get('additional_costs', []))
     
     # Operational Expenditure
-    opex = platform_cost + domain_cost + insurance_cost + caa_cost + marketing_cost + repairs_cost + shipping_supplies_cost
+    opex = platform_cost + domain_cost + insurance_cost + caa_cost + marketing_cost + repairs_cost
     total_first_year_costs = capex + opex + additional_costs_total
     
     # Revenue & Margin
@@ -226,7 +235,7 @@ def calculate_financials():
     weighted_avg_revenue = (flip_avg_rev * flip_ratio) + (mini4_avg_rev * mini4_ratio)
     
     processing_cost = weighted_avg_revenue * (processing_fee / 100.0)
-    variable_cost_per_rental = shipping_cost + processing_cost
+    variable_cost_per_rental = total_shipping_cost_per_rental + processing_cost
     contribution_margin = weighted_avg_revenue - variable_cost_per_rental
     
     # Break-Even Analysis
@@ -280,7 +289,7 @@ def create_export_data(results):
             flip_qty, flip_cost, mini4_qty, mini4_cost,
             case_cost, battery_cost, filter_cost, web_cost,
             (flip_qty + mini4_qty) * 38.99, platform_cost, domain_cost, insurance_cost, caa_cost,
-            marketing_cost, repairs_cost, shipping_supplies_cost, shipping_cost,
+            marketing_cost, repairs_cost, shipping_cost, total_shipping_cost_per_rental,
             flip_daily, flip_weekend, flip_weekly,
             mini4_daily, mini4_weekend, mini4_weekly,
             mix_daily, mix_weekend, mix_weekly, processing_fee,
@@ -367,7 +376,7 @@ def create_export_data(results):
         'Amount (£)': [
             flip_qty * flip_cost, mini4_qty * mini4_cost, (flip_qty + mini4_qty) * 38.99, case_cost + battery_cost + filter_cost,
             web_cost + legal_cost, platform_cost, domain_cost, insurance_cost + caa_cost,
-            marketing_cost, repairs_cost, shipping_supplies_cost
+            marketing_cost, repairs_cost, shipping_cost
         ],
         'Type': [
             'Capital', 'Capital', 'Capital', 'Capital', 'Capital',
@@ -623,6 +632,34 @@ if mix_total == 100.0:
     styled_monthly_df = df_monthly_projections.style.applymap(color_profit, subset=['Monthly Profit'])
     st.dataframe(styled_monthly_df, use_container_width=True)
     
+    # Detailed Monthly Breakdown
+    st.markdown("**📊 Detailed Monthly Breakdown:**")
+    
+    breakdown_data = []
+    for util in target_utilisation_rates:
+        proj = calculate_monthly_projection(util)
+        breakdown_data.append({
+            'Utilisation Rate': f"{util}%",
+            'Monthly Revenue': f"£{proj['monthly_revenue']:,.2f}",
+            'Monthly Variable Costs': f"£{proj['monthly_variable_costs']:,.2f}",
+            'Monthly Operational Costs': f"£{proj['monthly_operational_costs']:,.2f}",
+            'Monthly Profit': f"£{proj['monthly_profit']:,.2f}",
+            'Profit Margin %': f"{(proj['monthly_profit'] / proj['monthly_revenue'] * 100):.1f}%" if proj['monthly_revenue'] > 0 else "0.0%"
+        })
+    
+    df_breakdown = pd.DataFrame(breakdown_data)
+    st.dataframe(df_breakdown, use_container_width=True)
+    
+    # Debug calculation for 15% utilisation
+    st.markdown("**🔍 Debug Calculation (15% Utilisation):**")
+    debug_proj = calculate_monthly_projection(15)
+    st.markdown(f"""
+    - **Monthly Revenue**: £{debug_proj['monthly_revenue']:,.2f}
+    - **Monthly Variable Costs**: £{debug_proj['monthly_variable_costs']:,.2f}
+    - **Monthly Operational Costs**: £{debug_proj['monthly_operational_costs']:,.2f}
+    - **Calculation**: £{debug_proj['monthly_revenue']:,.2f} - £{debug_proj['monthly_variable_costs']:,.2f} - £{debug_proj['monthly_operational_costs']:,.2f} = £{debug_proj['monthly_profit']:,.2f}
+    """)
+    
     # Add explanatory text
     st.markdown("""
     <div style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #4f46e5;">
@@ -633,7 +670,12 @@ if mix_total == 100.0:
             <li><strong>30% Utilisation:</strong> Optimistic scenario with strong market demand</li>
         </ul>
         <p><strong>Monthly Profit Calculation:</strong></p>
-        <p>Monthly Revenue - Monthly Variable Costs - Monthly Operational Costs</p>
+        <p><strong>Monthly Profit = Monthly Revenue - Monthly Variable Costs - Monthly Operational Costs</strong></p>
+        <ul>
+            <li><strong>Monthly Revenue:</strong> Total rental income for the month</li>
+            <li><strong>Monthly Variable Costs:</strong> Shipping + payment processing fees per rental</li>
+            <li><strong>Monthly Operational Costs:</strong> Platform, insurance, marketing, repairs, etc. (annual ÷ 12)</li>
+        </ul>
         <p><em>Note: Monthly profit excludes the initial capital expenditure (£2,918.81) as this is a one-time startup cost.</em></p>
     </div>
     """, unsafe_allow_html=True)
@@ -688,7 +730,8 @@ if mix_total == 100.0:
         st.markdown(f"- Platform & Hosting: £{(platform_cost + domain_cost) / 12:,.2f}")
         st.markdown(f"- Insurance & CAA: £{(insurance_cost + caa_cost) / 12:,.2f}")
         st.markdown(f"- Marketing: £{marketing_cost / 12:,.2f}")
-        st.markdown(f"- Repairs & Supplies: £{(repairs_cost + shipping_supplies_cost) / 12:,.2f}")
+        st.markdown(f"- Repairs & Maintenance: £{repairs_cost / 12:,.2f}")
+        st.markdown(f"- Shipping Cost per Rental: £{total_shipping_cost_per_rental:.2f} (Postage + Box)")
     
     # Charts
     st.subheader("9. Visual Analysis")
