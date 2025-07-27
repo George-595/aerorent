@@ -77,7 +77,7 @@ with st.sidebar:
         filter_cost = st.number_input("ND Filters Cost (£)", min_value=0.0, value=0.0, step=10.0)
     
     with col2:
-        flip_cost = st.number_input("DJI Flip Cost (£)", min_value=0.0, value=659.0, step=10.0)
+        flip_cost = st.number_input("DJI Flip Cost (£)", min_value=0.0, value=587.95, step=10.0)
         mini4_cost = st.number_input("DJI Mini 4 Pro Cost (£)", min_value=0.0, value=899.0, step=10.0)
         web_cost = st.number_input("Website Setup Cost (£)", min_value=0.0, value=0.0, step=100.0)
         legal_cost = st.number_input("Legal Fees (£)", min_value=0.0, value=100.0, step=50.0)
