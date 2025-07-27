@@ -72,15 +72,15 @@ with st.sidebar:
     with col1:
         flip_qty = st.number_input("DJI Flips (Qty)", min_value=0.0, value=3.0, step=1.0)
         mini4_qty = st.number_input("DJI Mini 4 Pros (Qty)", min_value=0.0, value=1.0, step=1.0)
-        case_cost = st.number_input("Hard Cases Cost (£)", min_value=0.0, value=200.0, step=10.0)
-        battery_cost = st.number_input("Extra Batteries Cost (£)", min_value=0.0, value=236.0, step=10.0)
-        filter_cost = st.number_input("ND Filters Cost (£)", min_value=0.0, value=180.0, step=10.0)
+        case_cost = st.number_input("Hard Cases Cost (£)", min_value=0.0, value=0.0, step=10.0)
+        battery_cost = st.number_input("Extra Batteries Cost (£)", min_value=0.0, value=0.0, step=10.0)
+        filter_cost = st.number_input("ND Filters Cost (£)", min_value=0.0, value=0.0, step=10.0)
     
     with col2:
         flip_cost = st.number_input("DJI Flip Cost (£)", min_value=0.0, value=659.0, step=10.0)
-        mini4_cost = st.number_input("DJI Mini 4 Pro Cost (£)", min_value=0.0, value=979.0, step=10.0)
-        web_cost = st.number_input("Website Setup Cost (£)", min_value=0.0, value=2500.0, step=100.0)
-        legal_cost = st.number_input("Legal Fees (£)", min_value=0.0, value=500.0, step=50.0)
+        mini4_cost = st.number_input("DJI Mini 4 Pro Cost (£)", min_value=0.0, value=899.0, step=10.0)
+        web_cost = st.number_input("Website Setup Cost (£)", min_value=0.0, value=0.0, step=100.0)
+        legal_cost = st.number_input("Legal Fees (£)", min_value=0.0, value=100.0, step=50.0)
     
     # Operational Expenditure
     st.subheader("2. Annual Operational Costs")
@@ -100,12 +100,59 @@ with st.sidebar:
     
     processing_fee = st.number_input("Payment Processing Fee (%)", min_value=0.0, value=1.5, step=0.1)
 
+    # Additional Costs Section
+    st.subheader("3. Additional Costs")
+    st.markdown("Add any additional costs with notes")
+    
+    # Initialize session state for additional costs if it doesn't exist
+    if 'additional_costs' not in st.session_state:
+        st.session_state.additional_costs = []
+    
+    # Add new cost button
+    if st.button("➕ Add Additional Cost"):
+        st.session_state.additional_costs.append({"amount": 0.0, "note": ""})
+    
+    # Display existing additional costs
+    additional_costs_total = 0.0
+    costs_to_remove = []
+    
+    for i, cost in enumerate(st.session_state.additional_costs):
+        col1, col2, col3 = st.columns([1, 2, 0.5])
+        with col1:
+            new_amount = st.number_input(f"Amount (£)", min_value=0.0, value=cost["amount"], step=10.0, key=f"cost_amount_{i}")
+            st.session_state.additional_costs[i]["amount"] = new_amount
+        with col2:
+            new_note = st.text_input(f"Description", value=cost["note"], key=f"cost_note_{i}")
+            st.session_state.additional_costs[i]["note"] = new_note
+        with col3:
+            if st.button("🗑️", key=f"remove_cost_{i}"):
+                costs_to_remove.append(i)
+        
+        additional_costs_total += new_amount
+    
+    # Remove costs that were marked for deletion
+    for index in reversed(costs_to_remove):
+        st.session_state.additional_costs.pop(index)
+        st.rerun()
+    
+    # Display total additional costs
+    if additional_costs_total > 0:
+        st.markdown(f"**Total Additional Costs: £{additional_costs_total:,.2f}**")
+    
+    # Display additional costs breakdown
+    if st.session_state.additional_costs:
+        st.markdown("**Additional Costs Breakdown:**")
+        for i, cost in enumerate(st.session_state.additional_costs):
+            if cost["amount"] > 0:
+                note_display = cost["note"] if cost["note"] else "No description"
+                st.markdown(f"- £{cost['amount']:,.2f}: {note_display}")
+
 # Main content area
 col1, col2 = st.columns([2, 1])
 
 with col1:
     # Pricing Strategy
-    st.subheader("3. Pricing & Revenue Strategy")
+    st.subheader("4. Pricing & Revenue Strategy")
     
     pricing_col1, pricing_col2 = st.columns(2)
     
@@ -145,9 +192,12 @@ def calculate_financials():
     total_drones = flip_qty + mini4_qty
     capex = (flip_qty * flip_cost) + (mini4_qty * mini4_cost) + case_cost + battery_cost + filter_cost + web_cost + legal_cost
     
+    # Additional Costs
+    additional_costs_total = sum(cost["amount"] for cost in st.session_state.get('additional_costs', []))
+    
     # Operational Expenditure
     opex = platform_cost + domain_cost + insurance_cost + caa_cost + marketing_cost + repairs_cost + shipping_supplies_cost
-    total_first_year_costs = capex + opex
+    total_first_year_costs = capex + opex + additional_costs_total
     
     # Revenue & Margin
     mix_daily_pct = mix_daily / 100.0
@@ -186,6 +236,10 @@ def calculate_financials():
 
 # Function to create comprehensive data export
 def create_export_data(results):
+    # Get additional costs
+    additional_costs = st.session_state.get('additional_costs', [])
+    additional_costs_total = sum(cost["amount"] for cost in additional_costs)
+    
     # Create multiple dataframes for different sections
     
     # 1. Input Parameters
@@ -230,6 +284,14 @@ def create_export_data(results):
             '£'
         ]
     }
+    
+    # Add additional costs to inputs data
+    for i, cost in enumerate(additional_costs):
+        if cost["amount"] > 0:
+            inputs_data['Category'].append('Additional Costs')
+            inputs_data['Parameter'].append(f"Additional Cost {i+1}: {cost['note']}" if cost['note'] else f"Additional Cost {i+1}")
+            inputs_data['Value'].append(cost["amount"])
+            inputs_data['Unit'].append('£')
     
     # 2. Key Metrics
     metrics_data = {
@@ -286,6 +348,13 @@ def create_export_data(results):
             'Operational', 'Operational', 'Operational', 'Operational', 'Operational', 'Operational'
         ]
     }
+    
+    # Add additional costs to cost breakdown
+    for i, cost in enumerate(additional_costs):
+        if cost["amount"] > 0:
+            cost_breakdown_data['Cost Category'].append(f"Additional Cost {i+1}: {cost['note']}" if cost['note'] else f"Additional Cost {i+1}")
+            cost_breakdown_data['Amount (£)'].append(cost["amount"])
+            cost_breakdown_data['Type'].append('Additional')
     
     return {
         'inputs': pd.DataFrame(inputs_data),
@@ -388,7 +457,7 @@ if mix_total == 100.0:
     st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.subheader("4. Key Metrics")
+        st.subheader("5. Key Metrics")
         
         # Key metrics cards
         st.markdown(f"""
@@ -427,7 +496,7 @@ if mix_total == 100.0:
         """, unsafe_allow_html=True)
 
     # Projections table
-    st.subheader("5. Annual Projections")
+    st.subheader("6. Annual Projections")
     
     def calculate_projection(utilisation):
         rental_days = results['total_available_days'] * (utilisation / 100.0)
@@ -463,7 +532,7 @@ if mix_total == 100.0:
     st.dataframe(styled_df, use_container_width=True)
     
     # Charts
-    st.subheader("6. Visual Analysis")
+    st.subheader("7. Visual Analysis")
     
     chart_col1, chart_col2 = st.columns(2)
     
