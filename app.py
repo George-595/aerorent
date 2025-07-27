@@ -5,6 +5,78 @@ import plotly.express as px
 from datetime import datetime
 import io
 
+# Define presets
+PRESETS = {
+    "Preset 1 (Current)": {
+        # Capital Expenditure
+        "flip_qty": 3.0,
+        "flip_cost": 587.95,
+        "mini4_qty": 1.0,
+        "mini4_cost": 899.0,
+        "case_cost_per_unit": 45.0,
+        "battery_cost": 0.0,
+        "filter_cost": 0.0,
+        "web_cost": 0.0,
+        "legal_cost": 100.0,
+        
+        # Operational Costs
+        "platform_cost": 228.0,
+        "domain_cost": 30.0,
+        "insurance_cost": 750.0,
+        "caa_cost": 11.79,
+        "marketing_cost": 6000.0,
+        "repairs_cost": 295.60,
+        "shipping_cost": 32.0,
+        "box_cost": 1.51,
+        "processing_fee": 1.5,
+        
+        # Pricing Strategy
+        "flip_daily": 49.0,
+        "flip_weekend": 85.0,
+        "flip_weekly": 165.0,
+        "mini4_daily": 65.0,
+        "mini4_weekend": 109.0,
+        "mini4_weekly": 210.0,
+        "mix_daily": 20.0,
+        "mix_weekend": 60.0,
+        "mix_weekly": 20.0
+    },
+    "Preset 2 (New)": {
+        # Capital Expenditure
+        "flip_qty": 3.0,
+        "flip_cost": 587.95,
+        "mini4_qty": 1.0,
+        "mini4_cost": 899.0,
+        "case_cost_per_unit": 45.0,
+        "battery_cost": 0.0,
+        "filter_cost": 0.0,
+        "web_cost": 0.0,
+        "legal_cost": 100.0,
+        
+        # Operational Costs
+        "platform_cost": 228.0,
+        "domain_cost": 30.0,
+        "insurance_cost": 750.0,
+        "caa_cost": 11.79,
+        "marketing_cost": 6000.0,
+        "repairs_cost": 295.6,
+        "shipping_cost": 32.0,
+        "box_cost": 1.51,
+        "processing_fee": 1.5,
+        
+        # Pricing Strategy
+        "flip_daily": 45.0,
+        "flip_weekend": 72.99,
+        "flip_weekly": 130.0,
+        "mini4_daily": 45.0,
+        "mini4_weekend": 84.99,
+        "mini4_weekly": 190.0,
+        "mix_daily": 10.0,
+        "mix_weekend": 65.0,
+        "mix_weekly": 25.0
+    }
+}
+
 # Page configuration
 st.set_page_config(
     page_title="AeroRent UK - Financial Calculator",
@@ -54,6 +126,13 @@ st.markdown("""
         text-align: center;
         margin: 1rem 0;
     }
+    .preset-selector {
+        background-color: #f8fafc;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 2px solid #e5e7eb;
+        margin-bottom: 1rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -65,22 +144,35 @@ st.markdown('<p class="sub-header">Interactive financial projections for your dr
 with st.sidebar:
     st.header("📊 Business Configuration")
     
+    # Preset Selector
+    st.markdown('<div class="preset-selector">', unsafe_allow_html=True)
+    st.subheader("🎯 Quick Presets")
+    selected_preset = st.selectbox(
+        "Choose a preset configuration:",
+        list(PRESETS.keys()),
+        help="Select a preset to quickly load predefined values"
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Get selected preset values
+    preset_values = PRESETS[selected_preset]
+    
     # Capital Expenditure
     st.subheader("1. Initial Capital Expenditure")
     
     col1, col2 = st.columns(2)
     with col1:
-        flip_qty = st.number_input("DJI Flips (Qty)", min_value=0.0, value=3.0, step=1.0)
-        mini4_qty = st.number_input("DJI Mini 4 Pros (Qty)", min_value=0.0, value=1.0, step=1.0)
-        case_cost_per_unit = st.number_input("Hard Case Cost per Unit (£)", min_value=0.0, value=45.0, step=10.0)
-        battery_cost = st.number_input("Extra Batteries Cost (£)", min_value=0.0, value=0.0, step=10.0)
-        filter_cost = st.number_input("ND Filters Cost (£)", min_value=0.0, value=0.0, step=10.0)
+        flip_qty = st.number_input("DJI Flips (Qty)", min_value=0.0, value=preset_values["flip_qty"], step=1.0)
+        mini4_qty = st.number_input("DJI Mini 4 Pros (Qty)", min_value=0.0, value=preset_values["mini4_qty"], step=1.0)
+        case_cost_per_unit = st.number_input("Hard Case Cost per Unit (£)", min_value=0.0, value=preset_values["case_cost_per_unit"], step=10.0)
+        battery_cost = st.number_input("Extra Batteries Cost (£)", min_value=0.0, value=preset_values["battery_cost"], step=10.0)
+        filter_cost = st.number_input("ND Filters Cost (£)", min_value=0.0, value=preset_values["filter_cost"], step=10.0)
     
     with col2:
-        flip_cost = st.number_input("DJI Flip Cost (£)", min_value=0.0, value=587.95, step=10.0)
-        mini4_cost = st.number_input("DJI Mini 4 Pro Cost (£)", min_value=0.0, value=899.0, step=10.0)
-        web_cost = st.number_input("Website Setup Cost (£)", min_value=0.0, value=0.0, step=100.0)
-        legal_cost = st.number_input("Legal Fees (£)", min_value=0.0, value=100.0, step=50.0)
+        flip_cost = st.number_input("DJI Flip Cost (£)", min_value=0.0, value=preset_values["flip_cost"], step=10.0)
+        mini4_cost = st.number_input("DJI Mini 4 Pro Cost (£)", min_value=0.0, value=preset_values["mini4_cost"], step=10.0)
+        web_cost = st.number_input("Website Setup Cost (£)", min_value=0.0, value=preset_values["web_cost"], step=100.0)
+        legal_cost = st.number_input("Legal Fees (£)", min_value=0.0, value=preset_values["legal_cost"], step=50.0)
     
     # SD Cards (1 per drone)
     total_drones_for_sd = flip_qty + mini4_qty
@@ -101,27 +193,27 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        platform_cost = st.number_input("E-commerce Platform (£)", min_value=0.0, value=228.0, step=10.0)
-        insurance_cost = st.number_input("Corporate Insurance (£)", min_value=0.0, value=750.0, step=50.0)
-        marketing_cost = st.number_input("Digital Marketing (£)", min_value=0.0, value=6000.0, step=500.0)
+        platform_cost = st.number_input("E-commerce Platform (£)", min_value=0.0, value=preset_values["platform_cost"], step=10.0)
+        insurance_cost = st.number_input("Corporate Insurance (£)", min_value=0.0, value=preset_values["insurance_cost"], step=50.0)
+        marketing_cost = st.number_input("Digital Marketing (£)", min_value=0.0, value=preset_values["marketing_cost"], step=500.0)
     
     with col2:
-        domain_cost = st.number_input("Domain & Hosting (£)", min_value=0.0, value=30.0, step=5.0)
-        caa_cost = st.number_input("CAA Renewal (£)", min_value=0.0, value=11.79, step=1.0)
-        repairs_cost = st.number_input("Repairs & Maintenance (£)", min_value=0.0, value=295.60, step=10.0)
+        domain_cost = st.number_input("Domain & Hosting (£)", min_value=0.0, value=preset_values["domain_cost"], step=5.0)
+        caa_cost = st.number_input("CAA Renewal (£)", min_value=0.0, value=preset_values["caa_cost"], step=1.0)
+        repairs_cost = st.number_input("Repairs & Maintenance (£)", min_value=0.0, value=preset_values["repairs_cost"], step=10.0)
     
     # Shipping costs per rental
     st.markdown("**Shipping Costs per Rental:**")
     shipping_col1, shipping_col2 = st.columns(2)
     with shipping_col1:
-        shipping_cost = st.number_input("Postage Cost per Rental (£)", min_value=0.0, value=32.0, step=1.0)
+        shipping_cost = st.number_input("Postage Cost per Rental (£)", min_value=0.0, value=preset_values["shipping_cost"], step=1.0)
     with shipping_col2:
-        box_cost = st.number_input("Cardboard Box per Order (£)", min_value=0.0, value=1.51, step=0.1)
+        box_cost = st.number_input("Cardboard Box per Order (£)", min_value=0.0, value=preset_values["box_cost"], step=0.1)
     
     total_shipping_cost_per_rental = shipping_cost + box_cost
     st.markdown(f"**Total Shipping Cost per Rental: £{total_shipping_cost_per_rental:.2f}** (Postage: £{shipping_cost:.2f} + Box: £{box_cost:.2f})")
     
-    processing_fee = st.number_input("Payment Processing Fee (%)", min_value=0.0, value=1.5, step=0.1)
+    processing_fee = st.number_input("Payment Processing Fee (%)", min_value=0.0, value=preset_values["processing_fee"], step=0.1)
 
     # Additional Costs Section
     st.subheader("3. Additional Costs")
@@ -181,26 +273,26 @@ with col1:
     
     with pricing_col1:
         st.markdown("**DJI Flip Pricing (£)**")
-        flip_daily = st.number_input("Daily Hire", min_value=0.0, value=49.0, step=1.0, key="flip_daily")
-        flip_weekend = st.number_input("Weekend Hire", min_value=0.0, value=85.0, step=1.0, key="flip_weekend")
-        flip_weekly = st.number_input("Weekly Hire", min_value=0.0, value=165.0, step=5.0, key="flip_weekly")
+        flip_daily = st.number_input("Daily Hire", min_value=0.0, value=preset_values["flip_daily"], step=1.0, key="flip_daily")
+        flip_weekend = st.number_input("Weekend Hire", min_value=0.0, value=preset_values["flip_weekend"], step=1.0, key="flip_weekend")
+        flip_weekly = st.number_input("Weekly Hire", min_value=0.0, value=preset_values["flip_weekly"], step=5.0, key="flip_weekly")
     
     with pricing_col2:
         st.markdown("**DJI Mini 4 Pro Pricing (£)**")
-        mini4_daily = st.number_input("Daily Hire", min_value=0.0, value=65.0, step=1.0, key="mini4_daily")
-        mini4_weekend = st.number_input("Weekend Hire", min_value=0.0, value=109.0, step=1.0, key="mini4_weekend")
-        mini4_weekly = st.number_input("Weekly Hire", min_value=0.0, value=210.0, step=5.0, key="mini4_weekly")
+        mini4_daily = st.number_input("Daily Hire", min_value=0.0, value=preset_values["mini4_daily"], step=1.0, key="mini4_daily")
+        mini4_weekend = st.number_input("Weekend Hire", min_value=0.0, value=preset_values["mini4_weekend"], step=1.0, key="mini4_weekend")
+        mini4_weekly = st.number_input("Weekly Hire", min_value=0.0, value=preset_values["mini4_weekly"], step=5.0, key="mini4_weekly")
     
     # Rental Mix
     st.markdown("**Rental Mix Assumption (%)**")
     mix_col1, mix_col2, mix_col3 = st.columns(3)
     
     with mix_col1:
-        mix_daily = st.number_input("Daily", min_value=0.0, max_value=100.0, value=20.0, step=5.0, key="mix_daily")
+        mix_daily = st.number_input("Daily", min_value=0.0, max_value=100.0, value=preset_values["mix_daily"], step=5.0, key="mix_daily")
     with mix_col2:
-        mix_weekend = st.number_input("Weekend", min_value=0.0, max_value=100.0, value=60.0, step=5.0, key="mix_weekend")
+        mix_weekend = st.number_input("Weekend", min_value=0.0, max_value=100.0, value=preset_values["mix_weekend"], step=5.0, key="mix_weekend")
     with mix_col3:
-        mix_weekly = st.number_input("Weekly", min_value=0.0, max_value=100.0, value=20.0, step=5.0, key="mix_weekly")
+        mix_weekly = st.number_input("Weekly", min_value=0.0, max_value=100.0, value=preset_values["mix_weekly"], step=5.0, key="mix_weekly")
     
     # Validate rental mix
     mix_total = mix_daily + mix_weekend + mix_weekly
