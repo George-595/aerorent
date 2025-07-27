@@ -4,6 +4,15 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
 import io
+import base64
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+import tempfile
+import os
 
 # Define presets
 PRESETS = {
@@ -499,6 +508,490 @@ def create_export_data(results):
         'cost_breakdown': pd.DataFrame(cost_breakdown_data)
     }
 
+# Function to generate comprehensive PDF report
+def generate_pdf_report(results, vat_analysis, business_metrics, export_data, preset_name):
+    """
+    Generate a comprehensive PDF business plan report
+    """
+    # Create temporary file for PDF
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+        pdf_path = tmp_file.name
+    
+    # Create PDF document
+    doc = SimpleDocTemplate(pdf_path, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
+    story = []
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#1f2937')
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=16,
+        spaceAfter=12,
+        spaceBefore=20,
+        textColor=colors.HexColor('#4f46e5')
+    )
+    
+    subheading_style = ParagraphStyle(
+        'CustomSubheading',
+        parent=styles['Heading3'],
+        fontSize=14,
+        spaceAfter=8,
+        spaceBefore=16,
+        textColor=colors.HexColor('#6b7280')
+    )
+    
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceAfter=6,
+        textColor=colors.HexColor('#374151')
+    )
+    
+    # Title Page
+    story.append(Paragraph("🚁 AeroRent UK", title_style))
+    story.append(Paragraph("Drone Rental Business Plan", title_style))
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(f"Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", normal_style))
+    story.append(Paragraph(f"Configuration: {preset_name}", normal_style))
+    story.append(PageBreak())
+    
+    # Executive Summary
+    story.append(Paragraph("📋 Executive Summary", heading_style))
+    story.append(Paragraph("""
+    This comprehensive business plan outlines the financial projections and operational strategy for AeroRent UK, 
+    a professional drone rental service targeting the UK market. The analysis includes detailed cost structures, 
+    revenue projections, break-even analysis, and investment metrics to support strategic decision-making.
+    """, normal_style))
+    story.append(Spacer(1, 12))
+    
+    # Key Metrics Summary
+    story.append(Paragraph("🎯 Key Business Metrics", subheading_style))
+    
+    # Create key metrics table
+    key_metrics_data = [
+        ['Metric', 'Value'],
+        ['Total First-Year Investment', f"£{results['total_first_year_costs']:,.2f}"],
+        ['Break-Even Utilisation Rate', f"{results['break_even_utilisation']:.1f}%"],
+        ['Weighted Average Revenue per Day', f"£{results['weighted_avg_revenue']:.2f}"],
+        ['Contribution Margin per Day', f"£{results['contribution_margin']:.2f}"],
+        ['Total Available Rental Days', f"{results['total_available_days']:,.0f}"],
+        ['Expected ROI (20% Utilisation)', f"{business_metrics['roi_data'][1]['ROI']:.1f}%"]
+    ]
+    
+    key_metrics_table = Table(key_metrics_data, colWidths=[3*inch, 2*inch])
+    key_metrics_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4f46e5')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb'))
+    ]))
+    story.append(key_metrics_table)
+    story.append(PageBreak())
+    
+    # Business Configuration
+    story.append(Paragraph("⚙️ Business Configuration", heading_style))
+    
+    # Equipment Configuration
+    story.append(Paragraph("📦 Equipment & Assets", subheading_style))
+    equipment_data = [
+        ['Equipment', 'Quantity', 'Cost per Unit', 'Total Cost'],
+        ['DJI Flips', f"{flip_qty:.0f}", f"£{flip_cost:.2f}", f"£{flip_qty * flip_cost:.2f}"],
+        ['DJI Mini 4 Pros', f"{mini4_qty:.0f}", f"£{mini4_cost:.2f}", f"£{mini4_qty * mini4_cost:.2f}"],
+        ['Hard Cases', f"{flip_qty + mini4_qty:.0f}", f"£{case_cost_per_unit:.2f}", f"£{total_hard_cases_cost:.2f}"],
+        ['SD Cards', f"{flip_qty + mini4_qty:.0f}", "£38.99", f"£{(flip_qty + mini4_qty) * 38.99:.2f}"],
+        ['Website & Legal', '1', f"£{web_cost + legal_cost:.2f}", f"£{web_cost + legal_cost:.2f}"]
+    ]
+    
+    equipment_table = Table(equipment_data, colWidths=[1.5*inch, 1*inch, 1.5*inch, 1.5*inch])
+    equipment_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4f46e5')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb'))
+    ]))
+    story.append(equipment_table)
+    story.append(Spacer(1, 12))
+    
+    # Pricing Strategy
+    story.append(Paragraph("💰 Pricing Strategy", subheading_style))
+    pricing_data = [
+        ['Service', 'Daily', 'Weekend', 'Weekly'],
+        ['DJI Flip', f"£{flip_daily:.2f}", f"£{flip_weekend:.2f}", f"£{flip_weekly:.2f}"],
+        ['DJI Mini 4 Pro', f"£{mini4_daily:.2f}", f"£{mini4_weekend:.2f}", f"£{mini4_weekly:.2f}"]
+    ]
+    
+    pricing_table = Table(pricing_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+    pricing_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f0fdf4')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#bbf7d0'))
+    ]))
+    story.append(pricing_table)
+    story.append(Spacer(1, 12))
+    
+    # Rental Mix
+    story.append(Paragraph(f"📊 Rental Mix: Daily {mix_daily}% | Weekend {mix_weekend}% | Weekly {mix_weekly}%", normal_style))
+    story.append(PageBreak())
+    
+    # Financial Analysis
+    story.append(Paragraph("📈 Financial Analysis", heading_style))
+    
+    # Cost Structure
+    story.append(Paragraph("💸 Cost Structure Breakdown", subheading_style))
+    
+    # Capital Expenditure
+    story.append(Paragraph("🏗️ Capital Expenditure (One-time)", normal_style))
+    capex_data = [
+        ['Category', 'Amount'],
+        ['Equipment & Assets', f"£{results['capex'] - web_cost - legal_cost:,.2f}"],
+        ['Website & Legal', f"£{web_cost + legal_cost:,.2f}"],
+        ['Total Capex', f"£{results['capex']:,.2f}"]
+    ]
+    
+    capex_table = Table(capex_data, colWidths=[3*inch, 2*inch])
+    capex_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dc2626')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#fef2f2')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#fecaca'))
+    ]))
+    story.append(capex_table)
+    story.append(Spacer(1, 12))
+    
+    # Operational Costs
+    story.append(Paragraph("🔄 Annual Operational Costs", normal_style))
+    opex_data = [
+        ['Category', 'Annual Cost', 'Monthly Cost'],
+        ['Platform & Hosting', f"£{platform_cost + domain_cost:,.2f}", f"£{(platform_cost + domain_cost) / 12:,.2f}"],
+        ['Insurance & CAA', f"£{insurance_cost + caa_cost:,.2f}", f"£{(insurance_cost + caa_cost) / 12:,.2f}"],
+        ['Marketing', f"£{marketing_cost:,.2f}", f"£{marketing_cost / 12:,.2f}"],
+        ['Repairs & Maintenance', f"£{repairs_cost:,.2f}", f"£{repairs_cost / 12:,.2f}"],
+        ['Accountant', f"£{accountant_cost * 12:,.2f}", f"£{accountant_cost:,.2f}"],
+        ['Total Opex', f"£{results['opex']:,.2f}", f"£{results['opex'] / 12:,.2f}"]
+    ]
+    
+    opex_table = Table(opex_data, colWidths=[2*inch, 1.5*inch, 1.5*inch])
+    opex_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dc2626')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#fef2f2')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#fecaca'))
+    ]))
+    story.append(opex_table)
+    story.append(Spacer(1, 12))
+    
+    # Variable Costs
+    story.append(Paragraph("📦 Variable Costs per Rental", normal_style))
+    variable_costs_data = [
+        ['Cost Item', 'Amount per Rental'],
+        ['Postage', f"£{shipping_cost:.2f}"],
+        ['Cardboard Box', f"£{box_cost:.2f}"],
+        ['Payment Processing (1.5%)', f"£{results['weighted_avg_revenue'] * 0.015:.2f}"],
+        ['Total Variable Cost', f"£{results['variable_cost_per_rental']:.2f}"]
+    ]
+    
+    variable_costs_table = Table(variable_costs_data, colWidths=[3*inch, 2*inch])
+    variable_costs_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f0fdf4')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#bbf7d0'))
+    ]))
+    story.append(variable_costs_table)
+    story.append(PageBreak())
+    
+    # Revenue Projections
+    story.append(Paragraph("📊 Revenue & Profit Projections", heading_style))
+    
+    # Annual Projections Table
+    story.append(Paragraph("📈 Annual Projections by Utilisation Rate", subheading_style))
+    
+    # Get projections data
+    projections_data = []
+    utilisation_rates = [20, results['break_even_utilisation'], 30, 40]
+    
+    for util in utilisation_rates:
+        if util > 0:
+            proj = calculate_projection(util)
+            projections_data.append([
+                f"{util:.1f}%",
+                f"£{proj['revenue']:,.0f}",
+                f"£{proj['profit']:,.0f}",
+                f"{(proj['profit'] / proj['revenue'] * 100):.1f}%" if proj['revenue'] > 0 else "0.0%"
+            ])
+    
+    projections_table_data = [['Utilisation', 'Annual Revenue', 'Annual Profit', 'Profit Margin']] + projections_data
+    projections_table = Table(projections_table_data, colWidths=[1*inch, 1.5*inch, 1.5*inch, 1*inch])
+    projections_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4f46e5')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb'))
+    ]))
+    story.append(projections_table)
+    story.append(Spacer(1, 12))
+    
+    # Monthly Projections
+    story.append(Paragraph("📅 Monthly Projections", subheading_style))
+    
+    monthly_data = []
+    target_utilisation_rates = [15, 20, 30]
+    
+    for util in target_utilisation_rates:
+        proj = calculate_monthly_projection(util)
+        monthly_data.append([
+            f"{util}%",
+            f"{proj['monthly_rentals']:.1f}",
+            f"£{proj['monthly_revenue']:,.0f}",
+            f"£{proj['monthly_profit']:,.0f}",
+            f"{(proj['monthly_profit'] / proj['monthly_revenue'] * 100):.1f}%" if proj['monthly_revenue'] > 0 else "0.0%"
+        ])
+    
+    monthly_table_data = [['Utilisation', 'Monthly Rentals', 'Monthly Revenue', 'Monthly Profit', 'Margin']] + monthly_data
+    monthly_table = Table(monthly_table_data, colWidths=[1*inch, 1.2*inch, 1.3*inch, 1.3*inch, 1.2*inch])
+    monthly_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f0fdf4')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#bbf7d0'))
+    ]))
+    story.append(monthly_table)
+    story.append(PageBreak())
+    
+    # Investment Analysis
+    story.append(Paragraph("💼 Investment Analysis", heading_style))
+    
+    # ROI Analysis
+    story.append(Paragraph("📈 Return on Investment (ROI) Analysis", subheading_style))
+    
+    roi_data = []
+    for data in business_metrics['roi_data']:
+        roi_data.append([
+            data['Utilisation'],
+            f"{data['ROI']:.1f}%",
+            f"£{data['Annual Profit']:,.0f}",
+            f"{data['Payback Years']:.1f} years" if data['Payback Years'] != float('inf') else "∞"
+        ])
+    
+    roi_table_data = [['Utilisation', 'ROI', 'Annual Profit', 'Payback Period']] + roi_data
+    roi_table = Table(roi_table_data, colWidths=[1.2*inch, 1.2*inch, 1.5*inch, 1.1*inch])
+    roi_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4f46e5')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb'))
+    ]))
+    story.append(roi_table)
+    story.append(Spacer(1, 12))
+    
+    # Cash Flow Analysis
+    story.append(Paragraph("💰 Cash Flow Analysis", subheading_style))
+    
+    cash_flow_data = []
+    for data in business_metrics['cash_flow_data']:
+        cash_flow_data.append([
+            data['Utilisation'],
+            f"£{data['Monthly Cash Flow']:,.0f}",
+            f"£{data['Annual Cash Flow']:,.0f}",
+            f"£{data['Monthly Profit']:,.0f}"
+        ])
+    
+    cash_flow_table_data = [['Utilisation', 'Monthly Cash Flow', 'Annual Cash Flow', 'Monthly Profit']] + cash_flow_data
+    cash_flow_table = Table(cash_flow_table_data, colWidths=[1.2*inch, 1.5*inch, 1.5*inch, 1.3*inch])
+    cash_flow_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f0fdf4')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#bbf7d0'))
+    ]))
+    story.append(cash_flow_table)
+    story.append(PageBreak())
+    
+    # Risk Assessment
+    story.append(Paragraph("⚠️ Risk Assessment", heading_style))
+    
+    # Scenario Analysis
+    story.append(Paragraph("🎯 Scenario Analysis", subheading_style))
+    
+    risk_data = []
+    risk_metrics = business_metrics['risk_metrics']
+    
+    for scenario_name, metrics in risk_metrics.items():
+        risk_data.append([
+            scenario_name.replace(' (', '\n('),
+            f"£{metrics['Annual Profit']:,.0f}",
+            f"{metrics['ROI']:.1f}%",
+            f"{metrics['Payback Years']:.1f} years" if metrics['Payback Years'] != float('inf') else "∞"
+        ])
+    
+    risk_table_data = [['Scenario', 'Annual Profit', 'ROI', 'Payback Period']] + risk_data
+    risk_table = Table(risk_table_data, colWidths=[2*inch, 1.5*inch, 1*inch, 1.5*inch])
+    risk_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dc2626')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#fef2f2')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#fecaca'))
+    ]))
+    story.append(risk_table)
+    story.append(Spacer(1, 12))
+    
+    # Sensitivity Analysis
+    story.append(Paragraph("📊 Sensitivity Analysis", subheading_style))
+    
+    sensitivity_data = []
+    for data in business_metrics['sensitivity_data']:
+        sensitivity_data.append([
+            data['Scenario'],
+            f"£{data['Adjusted Profit']:,.0f}",
+            f"{data['Profit Change %']:+.1f}%"
+        ])
+    
+    sensitivity_table_data = [['Scenario', 'Adjusted Profit', 'Profit Change']] + sensitivity_data
+    sensitivity_table = Table(sensitivity_table_data, colWidths=[2*inch, 1.5*inch, 1.5*inch])
+    sensitivity_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4f46e5')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb'))
+    ]))
+    story.append(sensitivity_table)
+    story.append(PageBreak())
+    
+    # VAT Analysis
+    story.append(Paragraph("🏛️ VAT Analysis", heading_style))
+    
+    story.append(Paragraph("""
+    This business operates under UK VAT regulations. The analysis below shows the VAT implications 
+    for the business at different utilisation rates and revenue levels.
+    """, normal_style))
+    story.append(Spacer(1, 12))
+    
+    # VAT Summary
+    story.append(Paragraph("💰 VAT Summary", subheading_style))
+    
+    vat_summary_data = [
+        ['Metric', 'Value'],
+        ['VAT Rate', f"{vat_analysis['vat_rate'] * 100:.0f}%"],
+        ['Annual Revenue (20% Utilisation)', f"£{vat_analysis['annual_revenue']:,.0f}"],
+        ['VAT on Revenue', f"£{vat_analysis['total_revenue_vat']:,.0f}"],
+        ['VAT Deductible', f"£{vat_analysis['total_vat_deductible']:,.0f}"],
+        ['Net VAT Payable', f"£{vat_analysis['net_vat_payable']:,.0f}"],
+        ['Profit After VAT', f"£{vat_analysis['profit_after_vat']:,.0f}"],
+        ['VAT Registration Required', "Yes" if vat_analysis['annual_revenue'] >= vat_analysis['vat_threshold'] else "No"]
+    ]
+    
+    vat_summary_table = Table(vat_summary_data, colWidths=[3*inch, 2*inch])
+    vat_summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dc2626')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#fef2f2')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#fecaca'))
+    ]))
+    story.append(vat_summary_table)
+    story.append(Spacer(1, 12))
+    
+    # Business Insights
+    story.append(Paragraph("💡 Business Insights & Recommendations", heading_style))
+    
+    insights = [
+        "🎯 **Break-Even Analysis**: The business requires " + f"{results['break_even_utilisation']:.1f}%" + " utilisation to break even in the first year.",
+        "📈 **Growth Potential**: At 30% utilisation, the business generates significant positive cash flow.",
+        "💰 **Investment Appeal**: Expected ROI of " + f"{business_metrics['roi_data'][1]['ROI']:.1f}%" + " at 20% utilisation makes this an attractive investment.",
+        "⚠️ **Risk Management**: Conservative estimates show the business remains viable even at 15% utilisation.",
+        "🏛️ **VAT Considerations**: " + ("VAT registration is required" if vat_analysis['annual_revenue'] >= vat_analysis['vat_threshold'] else "VAT registration threshold not reached") + " based on projected revenue.",
+        "📊 **Market Positioning**: Competitive pricing strategy positions the business well in the UK drone rental market.",
+        "🔄 **Operational Efficiency**: Fixed costs are well-controlled, with variable costs scaling appropriately with demand."
+    ]
+    
+    for insight in insights:
+        story.append(Paragraph(insight, normal_style))
+        story.append(Spacer(1, 6))
+    
+    # Conclusion
+    story.append(Paragraph("🎯 Conclusion", heading_style))
+    story.append(Paragraph("""
+    AeroRent UK presents a compelling investment opportunity with strong financial projections, 
+    manageable risk profile, and clear path to profitability. The business model demonstrates 
+    resilience across various market scenarios and offers attractive returns for investors 
+    seeking exposure to the growing drone rental market.
+    """, normal_style))
+    
+    # Build PDF
+    doc.build(story)
+    
+    # Read the generated PDF
+    with open(pdf_path, 'rb') as pdf_file:
+        pdf_data = pdf_file.read()
+    
+    # Clean up temporary file
+    os.unlink(pdf_path)
+    
+    return pdf_data
+
 if mix_total == 100.0:
     results = calculate_financials()
     
@@ -578,6 +1071,33 @@ if mix_total == 100.0:
     
     # Create export data
     export_data = create_export_data(results)
+    
+    # Generate PDF Report
+    st.markdown("### 📄 Professional Business Plan PDF")
+    st.markdown("Generate a comprehensive business plan PDF for investors and stakeholders")
+    
+    if st.button("🚀 Generate Business Plan PDF", type="primary", help="Create a professional PDF report with all data, charts, and analysis"):
+        with st.spinner("Generating comprehensive business plan PDF..."):
+            try:
+                pdf_data = generate_pdf_report(results, vat_analysis, business_metrics, export_data, selected_preset)
+                
+                st.download_button(
+                    label="📄 Download Business Plan PDF",
+                    data=pdf_data,
+                    file_name=f"aerorent_business_plan_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    mime="application/pdf",
+                    help="Download the complete business plan as a professional PDF document"
+                )
+                
+                st.success("✅ Business plan PDF generated successfully! Click the download button above to save.")
+                
+            except Exception as e:
+                st.error(f"❌ Error generating PDF: {str(e)}")
+                st.info("Please ensure all calculations are complete and try again.")
+    
+    st.markdown("---")
+    st.markdown("### 📊 Data Export Options")
+    st.markdown("Export specific data sections for further analysis")
     
     # Create a comprehensive CSV with all data
     def create_comprehensive_csv():
@@ -1023,7 +1543,18 @@ if mix_total == 100.0:
     st.subheader("10. Business Planning & Investment Metrics")
     
     # Calculate additional financial metrics
-    def calculate_business_metrics(results, utilisation_rates=[15, 20, 30]):
+    def calculate_business_metrics(results, utilisation_rates=None):
+        # If no utilisation rates provided, use default ones including break-even
+        if utilisation_rates is None:
+            # Get break-even utilisation and ensure it's included in the analysis
+            break_even_util = results['break_even_utilisation']
+            base_rates = [15, 20, 30]
+            
+            # Add break-even utilisation if it's not already in the base rates
+            if break_even_util not in base_rates and 10 <= break_even_util <= 50:
+                utilisation_rates = sorted(base_rates + [break_even_util])
+            else:
+                utilisation_rates = base_rates
         """
         Calculate business planning metrics with two different approaches:
         1. ROI & Payback: Include capex to measure return on total investment
@@ -1156,7 +1687,7 @@ if mix_total == 100.0:
         
         return metrics
     
-    business_metrics = calculate_business_metrics(results)
+    business_metrics = calculate_business_metrics(results, utilisation_rates=None)
     
     # Display metrics in tabs
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📈 ROI & Payback", "💰 Cash Flow", "🎯 Sensitivity", "⚠️ Risk Assessment", "📊 Summary", "🏛️ VAT Analysis"])
