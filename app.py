@@ -306,6 +306,19 @@ def create_export_data(results):
             inputs_data['Value'].append(cost["amount"])
             inputs_data['Unit'].append('£')
     
+    # Ensure all arrays have the same length by adding empty entries if needed
+    base_length = len(inputs_data['Category'])
+    for key in inputs_data:
+        while len(inputs_data[key]) < base_length:
+            if key == 'Category':
+                inputs_data[key].append('Additional Costs')
+            elif key == 'Parameter':
+                inputs_data[key].append('')
+            elif key == 'Value':
+                inputs_data[key].append(0.0)
+            elif key == 'Unit':
+                inputs_data[key].append('£')
+    
     # 2. Key Metrics
     metrics_data = {
         'Metric': [
