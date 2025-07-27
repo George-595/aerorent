@@ -726,12 +726,52 @@ if mix_total == 100.0:
             st.markdown(f"- Additional Costs: £{additional_costs:,.2f}")
     
     with col2:
-        st.markdown("**Monthly Operational Costs:**")
+        st.markdown("**Monthly Operational Costs (Fixed):**")
         st.markdown(f"- Platform & Hosting: £{(platform_cost + domain_cost) / 12:,.2f}")
         st.markdown(f"- Insurance & CAA: £{(insurance_cost + caa_cost) / 12:,.2f}")
         st.markdown(f"- Marketing: £{marketing_cost / 12:,.2f}")
         st.markdown(f"- Repairs & Maintenance: £{repairs_cost / 12:,.2f}")
-        st.markdown(f"- Shipping Cost per Rental: £{total_shipping_cost_per_rental:.2f} (Postage + Box)")
+    
+    # Monthly Cost Breakdown
+    st.markdown("---")
+    st.subheader("Monthly Cost Breakdown")
+    
+    # Calculate monthly costs for different utilisation rates
+    cost_breakdown_data = []
+    for util in [15, 20, 30]:
+        proj = calculate_monthly_projection(util)
+        cost_breakdown_data.append({
+            'Utilisation Rate': f"{util}%",
+            'Monthly Revenue': f"£{proj['monthly_revenue']:,.2f}",
+            'Variable Costs': f"£{proj['monthly_variable_costs']:,.2f}",
+            'Fixed Operational Costs': f"£{proj['monthly_operational_costs']:,.2f}",
+            'Total Monthly Costs': f"£{proj['monthly_variable_costs'] + proj['monthly_operational_costs']:,.2f}",
+            'Monthly Profit': f"£{proj['monthly_profit']:,.2f}"
+        })
+    
+    df_cost_breakdown = pd.DataFrame(cost_breakdown_data)
+    st.dataframe(df_cost_breakdown, use_container_width=True)
+    
+    # Variable vs Fixed Cost Explanation
+    st.markdown("""
+    <div style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #4f46e5;">
+        <h4>💰 Cost Structure Explanation:</h4>
+        <p><strong>Variable Costs (per rental):</strong></p>
+        <ul>
+            <li>Postage: £32.00 per rental</li>
+            <li>Cardboard Box: £1.51 per rental</li>
+            <li>Payment Processing: 1.5% of rental revenue</li>
+        </ul>
+        <p><strong>Fixed Operational Costs (monthly):</strong></p>
+        <ul>
+            <li>Platform & Hosting: £21.50/month</li>
+            <li>Insurance & CAA: £63.48/month</li>
+            <li>Marketing: £500.00/month</li>
+            <li>Repairs & Maintenance: £24.63/month</li>
+        </ul>
+        <p><em>Note: Variable costs increase with more rentals, while fixed costs remain the same regardless of utilisation.</em></p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Charts
     st.subheader("9. Visual Analysis")
