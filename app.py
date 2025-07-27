@@ -506,10 +506,16 @@ if mix_total == 100.0:
     def calculate_vat_analysis(results):
         vat_rate = 0.20  # 20% UK VAT rate
         
-        # VAT on Revenue (assuming all revenue is VATable)
-        total_revenue_vat = results['weighted_avg_revenue'] * vat_rate
+        # Calculate actual annual values based on utilisation
+        # For VAT analysis, we'll use 20% utilisation as the base case
+        base_utilisation = 20.0  # 20% utilisation rate
+        actual_rental_days = results['total_available_days'] * (base_utilisation / 100.0)
+        actual_annual_revenue = results['weighted_avg_revenue'] * actual_rental_days
         
-        # VAT-deductible items (business expenses)
+        # VAT on Revenue (assuming all revenue is VATable)
+        total_revenue_vat = actual_annual_revenue * vat_rate
+        
+        # VAT-deductible items (business expenses) - these are annual costs
         vat_deductible_items = {
             'DJI Flips': flip_qty * flip_cost * vat_rate,
             'DJI Mini 4 Pros': mini4_qty * mini4_cost * vat_rate,
@@ -538,14 +544,13 @@ if mix_total == 100.0:
         # Net VAT payable (VAT on revenue - VAT deductible)
         net_vat_payable = total_revenue_vat - total_vat_deductible
         
-        # Profit after VAT
-        profit_before_vat = results['contribution_margin']
-        profit_after_vat = profit_before_vat - net_vat_payable
+        # Calculate actual profit based on utilisation
+        actual_annual_profit = actual_annual_revenue - (results['variable_cost_per_rental'] * actual_rental_days) - results['opex'] - results['capex']
+        profit_after_vat = actual_annual_profit - net_vat_payable
         
         # VAT registration threshold analysis
         vat_threshold = 85000  # UK VAT registration threshold
-        annual_revenue = results['weighted_avg_revenue'] * results['total_available_days']
-        months_to_threshold = (vat_threshold / annual_revenue * 12) if annual_revenue > 0 else float('inf')
+        months_to_threshold = (vat_threshold / actual_annual_revenue * 12) if actual_annual_revenue > 0 else float('inf')
         
         return {
             'vat_rate': vat_rate,
@@ -553,12 +558,14 @@ if mix_total == 100.0:
             'vat_deductible_items': vat_deductible_items,
             'total_vat_deductible': total_vat_deductible,
             'net_vat_payable': net_vat_payable,
-            'profit_before_vat': profit_before_vat,
+            'profit_before_vat': actual_annual_profit,
             'profit_after_vat': profit_after_vat,
             'vat_threshold': vat_threshold,
-            'annual_revenue': annual_revenue,
+            'annual_revenue': actual_annual_revenue,
             'months_to_threshold': months_to_threshold,
-            'additional_costs_vat': additional_costs_vat
+            'additional_costs_vat': additional_costs_vat,
+            'actual_rental_days': actual_rental_days,
+            'base_utilisation': base_utilisation
         }
     
     vat_analysis = calculate_vat_analysis(results)
@@ -716,8 +723,8 @@ if mix_total == 100.0:
         st.markdown(f"""
         <div class="metric-card" style="border-left-color: #dc2626;">
             <h4>Profit After VAT</h4>
-            <h2>£{vat_analysis['profit_after_vat']:.2f}</h2>
-            <p style="font-size: 0.8rem; color: #6b7280;">Per rental day</p>
+            <h2>£{vat_analysis['profit_after_vat']:,.0f}</h2>
+            <p style="font-size: 0.8rem; color: #6b7280;">Annual at {vat_analysis['base_utilisation']:.0f}% utilisation</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -725,8 +732,8 @@ if mix_total == 100.0:
         st.markdown(f"""
         <div class="metric-card" style="border-left-color: #dc2626;">
             <h4>Net VAT Payable</h4>
-            <h2>£{vat_analysis['net_vat_payable']:.2f}</h2>
-            <p style="font-size: 0.8rem; color: #6b7280;">Per rental day</p>
+            <h2>£{vat_analysis['net_vat_payable']:,.0f}</h2>
+            <p style="font-size: 0.8rem; color: #6b7280;">Annual at {vat_analysis['base_utilisation']:.0f}% utilisation</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -1075,11 +1082,11 @@ if mix_total == 100.0:
         
         # Test different scenarios
         scenarios = [
-            ('Revenue -10%', 0.9),
-            ('Revenue -5%', 0.95),
-            ('Base Case', 1.0),
-            ('Revenue +5%', 1.05),
-            ('Revenue +10%', 1.10),
+            ('Revenue -10%', 0.9, 1.0),
+            ('Revenue -5%', 0.95, 1.0),
+            ('Base Case', 1.0, 1.0),
+            ('Revenue +5%', 1.05, 1.0),
+            ('Revenue +10%', 1.10, 1.0),
             ('Costs +10%', 1.0, 1.1),
             ('Costs +5%', 1.0, 1.05),
             ('Costs -5%', 1.0, 0.95),
@@ -1087,7 +1094,7 @@ if mix_total == 100.0:
         ]
         
         for scenario_name, revenue_mult, cost_mult in scenarios:
-            if len(scenario_name.split()) == 2:  # Revenue scenarios
+            if 'Revenue' in scenario_name:  # Revenue scenarios
                 adjusted_revenue = base_proj['revenue'] * revenue_mult
                 adjusted_profit = adjusted_revenue - results['opex'] - (base_proj['revenue'] - base_profit - results['opex'])
             else:  # Cost scenarios
