@@ -520,55 +520,6 @@ if mix_total == 100.0:
             <h2>{results['break_even_utilisation']:.1f}%</h2>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Cost Breakdown
-        st.markdown("---")
-        st.subheader("Cost Breakdown")
-        
-        # Calculate costs
-        capex = results['capex']
-        opex = results['opex']
-        additional_costs = sum(cost["amount"] for cost in st.session_state.get('additional_costs', []))
-        
-        # Initial Expenditure (One-time costs)
-        initial_expenditure = capex + additional_costs
-        
-        # Monthly costs (Annual operational costs / 12)
-        monthly_costs = opex / 12.0
-        annual_monthly_costs = opex
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4>Initial Expenditure</h4>
-                <h3>£{initial_expenditure:,.2f}</h3>
-                <p style="font-size: 0.8rem; color: #6b7280;">One-time startup costs</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4>Monthly Costs</h4>
-                <h3>£{monthly_costs:,.2f}</h3>
-                <p style="font-size: 0.8rem; color: #6b7280;">£{annual_monthly_costs:,.2f} annually</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Detailed breakdown
-        st.markdown("**Initial Expenditure Details:**")
-        st.markdown(f"- Drones & Equipment: £{capex - web_cost - legal_cost:,.2f}")
-        st.markdown(f"- Website & Legal: £{web_cost + legal_cost:,.2f}")
-        if additional_costs > 0:
-            st.markdown(f"- Additional Costs: £{additional_costs:,.2f}")
-        
-        st.markdown("**Monthly Operational Costs:**")
-        st.markdown(f"- Platform & Hosting: £{(platform_cost + domain_cost) / 12:,.2f}")
-        st.markdown(f"- Insurance & CAA: £{(insurance_cost + caa_cost) / 12:,.2f}")
-        st.markdown(f"- Marketing: £{marketing_cost / 12:,.2f}")
-        st.markdown(f"- Repairs & Supplies: £{(repairs_cost + shipping_supplies_cost) / 12:,.2f}")
 
     # Projections table
     st.subheader("6. Annual Projections")
@@ -606,8 +557,60 @@ if mix_total == 100.0:
     styled_df = df_projections.style.applymap(color_profit, subset=['Annual Profit'])
     st.dataframe(styled_df, use_container_width=True)
     
+    # Cost Breakdown Section
+    st.subheader("7. Cost Breakdown")
+    
+    # Calculate costs
+    capex = results['capex']
+    opex = results['opex']
+    additional_costs = sum(cost["amount"] for cost in st.session_state.get('additional_costs', []))
+    
+    # Initial Expenditure (One-time costs)
+    initial_expenditure = capex + additional_costs
+    
+    # Monthly costs (Annual operational costs / 12)
+    monthly_costs = opex / 12.0
+    annual_monthly_costs = opex
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Initial Expenditure</h4>
+            <h3>£{initial_expenditure:,.2f}</h3>
+            <p style="font-size: 0.8rem; color: #6b7280;">One-time startup costs</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Monthly Costs</h4>
+            <h3>£{monthly_costs:,.2f}</h3>
+            <p style="font-size: 0.8rem; color: #6b7280;">£{annual_monthly_costs:,.2f} annually</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Detailed breakdown
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**Initial Expenditure Details:**")
+        st.markdown(f"- Drones & Equipment: £{capex - web_cost - legal_cost:,.2f}")
+        st.markdown(f"- Website & Legal: £{web_cost + legal_cost:,.2f}")
+        if additional_costs > 0:
+            st.markdown(f"- Additional Costs: £{additional_costs:,.2f}")
+    
+    with col2:
+        st.markdown("**Monthly Operational Costs:**")
+        st.markdown(f"- Platform & Hosting: £{(platform_cost + domain_cost) / 12:,.2f}")
+        st.markdown(f"- Insurance & CAA: £{(insurance_cost + caa_cost) / 12:,.2f}")
+        st.markdown(f"- Marketing: £{marketing_cost / 12:,.2f}")
+        st.markdown(f"- Repairs & Supplies: £{(repairs_cost + shipping_supplies_cost) / 12:,.2f}")
+    
     # Charts
-    st.subheader("7. Visual Analysis")
+    st.subheader("8. Visual Analysis")
     
     chart_col1, chart_col2 = st.columns(2)
     
