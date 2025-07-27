@@ -29,6 +29,7 @@ PRESETS = {
         "shipping_cost": 32.0,
         "box_cost": 1.51,
         "processing_fee": 1.5,
+        "accountant_cost": 50.0,
         
         # Pricing Strategy
         "flip_daily": 49.0,
@@ -63,6 +64,7 @@ PRESETS = {
         "shipping_cost": 32.0,
         "box_cost": 1.51,
         "processing_fee": 1.5,
+        "accountant_cost": 50.0,
         
         # Pricing Strategy
         "flip_daily": 45.0,
@@ -202,6 +204,9 @@ with st.sidebar:
         caa_cost = st.number_input("CAA Renewal (£)", min_value=0.0, value=preset_values["caa_cost"], step=1.0)
         repairs_cost = st.number_input("Repairs & Maintenance (£)", min_value=0.0, value=preset_values["repairs_cost"], step=10.0)
     
+    # Accountant costs (monthly)
+    accountant_cost = st.number_input("Accountant Costs (Monthly £)", min_value=0.0, value=preset_values["accountant_cost"], step=25.0, help="Monthly accounting fees for bookkeeping, VAT returns, and tax compliance")
+    
     # Shipping costs per rental
     st.markdown("**Shipping Costs per Rental:**")
     shipping_col1, shipping_col2 = st.columns(2)
@@ -316,7 +321,7 @@ def calculate_financials():
     additional_costs_total = sum(cost["amount"] for cost in st.session_state.get('additional_costs', []))
     
     # Operational Expenditure
-    opex = platform_cost + domain_cost + insurance_cost + caa_cost + marketing_cost + repairs_cost
+    opex = platform_cost + domain_cost + insurance_cost + caa_cost + marketing_cost + repairs_cost + accountant_cost
     total_first_year_costs = capex + opex + additional_costs_total
     
     # Revenue & Margin
@@ -368,7 +373,7 @@ def create_export_data(results):
             'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure',
             'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure',
             'Capital Expenditure', 'Capital Expenditure', 'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
-            'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
+            'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
             'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy',
             'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy',
             'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy'
@@ -377,7 +382,7 @@ def create_export_data(results):
             'DJI Flips Quantity', 'DJI Flip Cost per Unit', 'DJI Mini 4 Pros Quantity', 'DJI Mini 4 Pro Cost per Unit',
             'Hard Case Cost per Unit', 'Extra Batteries Cost', 'ND Filters Cost', 'Website Setup Cost',
             'SD Cards Cost', 'Legal Fees', 'E-commerce Platform', 'Domain & Hosting',
-            'Corporate Insurance', 'CAA Renewal', 'Digital Marketing', 'Repairs & Maintenance', 'Shipping Supplies',
+            'Corporate Insurance', 'CAA Renewal', 'Digital Marketing', 'Repairs & Maintenance', 'Accountant Costs (Monthly)', 'Shipping Supplies',
             'Shipping Cost per Rental', 'DJI Flip Daily Price', 'DJI Flip Weekend Price', 'DJI Flip Weekly Price',
             'DJI Mini 4 Pro Daily Price', 'DJI Mini 4 Pro Weekend Price', 'DJI Mini 4 Pro Weekly Price',
             'Rental Mix Daily %', 'Rental Mix Weekend %', 'Rental Mix Weekly %', 'Payment Processing Fee %'
@@ -386,7 +391,7 @@ def create_export_data(results):
             flip_qty, flip_cost, mini4_qty, mini4_cost,
             case_cost_per_unit, battery_cost, filter_cost, web_cost,
             (flip_qty + mini4_qty) * 38.99, legal_cost, platform_cost, domain_cost,
-            insurance_cost, caa_cost, marketing_cost, repairs_cost, shipping_cost, total_shipping_cost_per_rental,
+            insurance_cost, caa_cost, marketing_cost, repairs_cost, accountant_cost, shipping_cost, total_shipping_cost_per_rental,
             flip_daily, flip_weekend, flip_weekly,
             mini4_daily, mini4_weekend, mini4_weekly,
             mix_daily, mix_weekend, mix_weekly, processing_fee
@@ -395,7 +400,7 @@ def create_export_data(results):
             'units', '£', 'units', '£',
             '£', '£', '£', '£',
             '£', '£', '£', '£',
-            '£', '£', '£', '£',
+            '£', '£', '£', '£', '£',
             '£', '£', '£',
             '£', '£', '£',
             '%', '%', '%', '%'
@@ -466,17 +471,17 @@ def create_export_data(results):
         'Cost Category': [
             'DJI Flips', 'DJI Mini 4 Pros', 'SD Cards', 'Hard Cases', 'Extra Batteries', 'ND Filters',
             'Website & Legal', 'E-commerce Platform', 'Domain & Hosting', 'Insurance & CAA',
-            'Marketing', 'Repairs & Maintenance', 'Shipping Supplies'
+            'Marketing', 'Repairs & Maintenance', 'Accountant Costs', 'Shipping Supplies'
         ],
         'Amount (£)': [
             flip_qty * flip_cost, mini4_qty * mini4_cost, (flip_qty + mini4_qty) * 38.99, total_hard_cases_cost,
             battery_cost, filter_cost, web_cost + legal_cost, platform_cost, domain_cost, insurance_cost + caa_cost,
-            marketing_cost, repairs_cost, shipping_cost
+            marketing_cost, repairs_cost, accountant_cost * 12, shipping_cost
         ],
         'Type': [
             'Capital', 'Capital', 'Capital', 'Capital', 'Capital', 'Capital',
             'Capital', 'Operational', 'Operational', 'Operational',
-            'Operational', 'Operational', 'Operational'
+            'Operational', 'Operational', 'Operational', 'Operational'
         ]
     }
     
@@ -643,6 +648,38 @@ if mix_total == 100.0:
         </div>
         """, unsafe_allow_html=True)
     
+    # Third row - VAT-adjusted metrics
+    metric_col7, metric_col8, metric_col9 = st.columns(3)
+    
+    with metric_col7:
+        st.markdown(f"""
+        <div class="metric-card" style="border-left-color: #dc2626;">
+            <h4>Profit After VAT</h4>
+            <h2>£{vat_analysis['profit_after_vat']:.2f}</h2>
+            <p style="font-size: 0.8rem; color: #6b7280;">Per rental day</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with metric_col8:
+        st.markdown(f"""
+        <div class="metric-card" style="border-left-color: #dc2626;">
+            <h4>Net VAT Payable</h4>
+            <h2>£{vat_analysis['net_vat_payable']:.2f}</h2>
+            <p style="font-size: 0.8rem; color: #6b7280;">Per rental day</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with metric_col9:
+        vat_status = "Must Register" if vat_analysis['annual_revenue'] >= vat_analysis['vat_threshold'] else "Below Threshold"
+        vat_color = "#dc2626" if vat_analysis['annual_revenue'] >= vat_analysis['vat_threshold'] else "#059669"
+        st.markdown(f"""
+        <div class="metric-card" style="border-left-color: {vat_color};">
+            <h4>VAT Status</h4>
+            <h2 style="color: {vat_color};">{vat_status}</h2>
+            <p style="font-size: 0.8rem; color: #6b7280;">£{vat_analysis['annual_revenue']:,.0f} annual revenue</p>
+        </div>
+        """, unsafe_allow_html=True)
+
     # Projections table
     st.subheader("6. Annual Projections")
     
@@ -826,6 +863,7 @@ if mix_total == 100.0:
         st.markdown(f"- Insurance & CAA: £{(insurance_cost + caa_cost) / 12:,.2f}")
         st.markdown(f"- Marketing: £{marketing_cost / 12:,.2f}")
         st.markdown(f"- Repairs & Maintenance: £{repairs_cost / 12:,.2f}")
+        st.markdown(f"- Accountant: £{accountant_cost:,.2f}")
     
     # Variable vs Fixed Cost Explanation
     st.markdown("""
@@ -843,6 +881,7 @@ if mix_total == 100.0:
             <li>Insurance & CAA: £63.48/month</li>
             <li>Marketing: £500.00/month</li>
             <li>Repairs & Maintenance: £24.63/month</li>
+            <li>Accountant: £150.00/month</li>
         </ul>
         <p><em>Note: Variable costs increase with more rentals, while fixed costs remain the same regardless of utilisation.</em></p>
     </div>
@@ -911,6 +950,645 @@ if mix_total == 100.0:
         fig_costs.update_layout(height=400)
         
         st.plotly_chart(fig_costs, use_container_width=True)
+
+    # Business Planning Metrics
+    st.subheader("10. Business Planning & Investment Metrics")
+    
+    # Calculate additional financial metrics
+    def calculate_business_metrics(results, utilisation_rates=[15, 20, 30]):
+        metrics = {}
+        
+        # ROI and Payback Period calculations
+        initial_investment = results['total_first_year_costs']
+        
+        # Calculate ROI for different utilisation rates
+        roi_data = []
+        payback_data = []
+        cash_flow_data = []
+        
+        for util in utilisation_rates:
+            proj = calculate_projection(util)
+            annual_profit = proj['profit']
+            
+            # ROI = (Annual Profit / Initial Investment) * 100
+            roi = (annual_profit / initial_investment * 100) if initial_investment > 0 else 0
+            
+            # Payback Period = Initial Investment / Annual Profit
+            payback_years = initial_investment / annual_profit if annual_profit > 0 else float('inf')
+            payback_months = payback_years * 12 if payback_years != float('inf') else float('inf')
+            
+            # Cash Flow Analysis
+            monthly_profit = annual_profit / 12
+            monthly_cash_flow = monthly_profit - (results['opex'] / 12)
+            
+            roi_data.append({
+                'Utilisation': f"{util}%",
+                'ROI': roi,
+                'Annual Profit': annual_profit,
+                'Initial Investment': initial_investment
+            })
+            
+            payback_data.append({
+                'Utilisation': f"{util}%",
+                'Payback Years': payback_years,
+                'Payback Months': payback_months,
+                'Annual Profit': annual_profit
+            })
+            
+            cash_flow_data.append({
+                'Utilisation': f"{util}%",
+                'Monthly Cash Flow': monthly_cash_flow,
+                'Annual Cash Flow': monthly_cash_flow * 12,
+                'Monthly Profit': monthly_profit
+            })
+        
+        metrics['roi_data'] = roi_data
+        metrics['payback_data'] = payback_data
+        metrics['cash_flow_data'] = cash_flow_data
+        
+        # Sensitivity Analysis
+        sensitivity_data = []
+        base_utilisation = 20  # Base case
+        base_proj = calculate_projection(base_utilisation)
+        base_profit = base_proj['profit']
+        
+        # Test different scenarios
+        scenarios = [
+            ('Revenue -10%', 0.9),
+            ('Revenue -5%', 0.95),
+            ('Base Case', 1.0),
+            ('Revenue +5%', 1.05),
+            ('Revenue +10%', 1.10),
+            ('Costs +10%', 1.0, 1.1),
+            ('Costs +5%', 1.0, 1.05),
+            ('Costs -5%', 1.0, 0.95),
+            ('Costs -10%', 1.0, 0.9)
+        ]
+        
+        for scenario_name, revenue_mult, cost_mult in scenarios:
+            if len(scenario_name.split()) == 2:  # Revenue scenarios
+                adjusted_revenue = base_proj['revenue'] * revenue_mult
+                adjusted_profit = adjusted_revenue - results['opex'] - (base_proj['revenue'] - base_profit - results['opex'])
+            else:  # Cost scenarios
+                adjusted_profit = base_profit - (results['opex'] * (cost_mult - 1))
+            
+            profit_change = ((adjusted_profit - base_profit) / base_profit * 100) if base_profit != 0 else 0
+            sensitivity_data.append({
+                'Scenario': scenario_name,
+                'Adjusted Profit': adjusted_profit,
+                'Profit Change %': profit_change
+            })
+        
+        metrics['sensitivity_data'] = sensitivity_data
+        
+        # Risk Assessment
+        worst_case = calculate_projection(10)  # 10% utilisation
+        best_case = calculate_projection(40)   # 40% utilisation
+        expected_case = calculate_projection(20)  # 20% utilisation
+        
+        risk_metrics = {
+            'Worst Case (10% Utilisation)': {
+                'Annual Profit': worst_case['profit'],
+                'ROI': (worst_case['profit'] / initial_investment * 100) if initial_investment > 0 else 0,
+                'Payback Years': initial_investment / worst_case['profit'] if worst_case['profit'] > 0 else float('inf')
+            },
+            'Expected Case (20% Utilisation)': {
+                'Annual Profit': expected_case['profit'],
+                'ROI': (expected_case['profit'] / initial_investment * 100) if initial_investment > 0 else 0,
+                'Payback Years': initial_investment / expected_case['profit'] if expected_case['profit'] > 0 else float('inf')
+            },
+            'Best Case (40% Utilisation)': {
+                'Annual Profit': best_case['profit'],
+                'ROI': (best_case['profit'] / initial_investment * 100) if initial_investment > 0 else 0,
+                'Payback Years': initial_investment / best_case['profit'] if best_case['profit'] > 0 else float('inf')
+            }
+        }
+        
+        metrics['risk_metrics'] = risk_metrics
+        
+        return metrics
+    
+    business_metrics = calculate_business_metrics(results)
+    
+    # Calculate VAT analysis
+    def calculate_vat_analysis(results):
+        vat_rate = 0.20  # 20% UK VAT rate
+        
+        # VAT on Revenue (assuming all revenue is VATable)
+        total_revenue_vat = results['weighted_avg_revenue'] * vat_rate
+        
+        # VAT-deductible items (business expenses)
+        vat_deductible_items = {
+            'DJI Flips': flip_qty * flip_cost * vat_rate,
+            'DJI Mini 4 Pros': mini4_qty * mini4_cost * vat_rate,
+            'Hard Cases': total_hard_cases_cost * vat_rate,
+            'SD Cards': (flip_qty + mini4_qty) * 38.99 * vat_rate,
+            'Extra Batteries': battery_cost * vat_rate,
+            'ND Filters': filter_cost * vat_rate,
+            'Website Setup': web_cost * vat_rate,
+            'Legal Fees': legal_cost * vat_rate,
+            'E-commerce Platform': platform_cost * vat_rate,
+            'Domain & Hosting': domain_cost * vat_rate,
+            'Corporate Insurance': insurance_cost * vat_rate,
+            'CAA Renewal': caa_cost * vat_rate,
+            'Digital Marketing': marketing_cost * vat_rate,
+            'Repairs & Maintenance': repairs_cost * vat_rate,
+            'Shipping Supplies': shipping_cost * vat_rate,
+            'Cardboard Boxes': box_cost * vat_rate,
+            'Accountant Costs': accountant_cost * 12 * vat_rate  # Annual accountant costs
+        }
+        
+        # Additional costs VAT
+        additional_costs_vat = sum(cost["amount"] * vat_rate for cost in st.session_state.get('additional_costs', []))
+        
+        total_vat_deductible = sum(vat_deductible_items.values()) + additional_costs_vat
+        
+        # Net VAT payable (VAT on revenue - VAT deductible)
+        net_vat_payable = total_revenue_vat - total_vat_deductible
+        
+        # Profit after VAT
+        profit_before_vat = results['contribution_margin']
+        profit_after_vat = profit_before_vat - net_vat_payable
+        
+        # VAT registration threshold analysis
+        vat_threshold = 85000  # UK VAT registration threshold
+        annual_revenue = results['weighted_avg_revenue'] * results['total_available_days']
+        months_to_threshold = (vat_threshold / annual_revenue * 12) if annual_revenue > 0 else float('inf')
+        
+        return {
+            'vat_rate': vat_rate,
+            'total_revenue_vat': total_revenue_vat,
+            'vat_deductible_items': vat_deductible_items,
+            'total_vat_deductible': total_vat_deductible,
+            'net_vat_payable': net_vat_payable,
+            'profit_before_vat': profit_before_vat,
+            'profit_after_vat': profit_after_vat,
+            'vat_threshold': vat_threshold,
+            'annual_revenue': annual_revenue,
+            'months_to_threshold': months_to_threshold,
+            'additional_costs_vat': additional_costs_vat
+        }
+    
+    vat_analysis = calculate_vat_analysis(results)
+    
+    # Display metrics in tabs
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📈 ROI & Payback", "💰 Cash Flow", "🎯 Sensitivity", "⚠️ Risk Assessment", "📊 Summary", "🏛️ VAT Analysis"])
+    
+    with tab1:
+        st.markdown("**Return on Investment (ROI) & Payback Period**")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**ROI Analysis**")
+            roi_df = pd.DataFrame(business_metrics['roi_data'])
+            roi_df['ROI'] = roi_df['ROI'].round(1)
+            roi_df['Annual Profit'] = roi_df['Annual Profit'].apply(lambda x: f"£{x:,.0f}")
+            roi_df['Initial Investment'] = roi_df['Initial Investment'].apply(lambda x: f"£{x:,.0f}")
+            st.dataframe(roi_df, use_container_width=True)
+        
+        with col2:
+            st.markdown("**Payback Period Analysis**")
+            payback_df = pd.DataFrame(business_metrics['payback_data'])
+            payback_df['Payback Years'] = payback_df['Payback Years'].apply(lambda x: f"{x:.1f}" if x != float('inf') else "∞")
+            payback_df['Payback Months'] = payback_df['Payback Months'].apply(lambda x: f"{x:.0f}" if x != float('inf') else "∞")
+            payback_df['Annual Profit'] = payback_df['Annual Profit'].apply(lambda x: f"£{x:,.0f}")
+            st.dataframe(payback_df, use_container_width=True)
+        
+        # ROI Chart
+        roi_values = [data['ROI'] for data in business_metrics['roi_data']]
+        utilisation_labels = [data['Utilisation'] for data in business_metrics['roi_data']]
+        
+        fig_roi = go.Figure()
+        fig_roi.add_trace(go.Bar(
+            x=utilisation_labels,
+            y=roi_values,
+            marker_color=['#4f46e5' if roi > 0 else '#dc2626' for roi in roi_values],
+            text=[f"{roi:.1f}%" for roi in roi_values],
+            textposition='auto'
+        ))
+        
+        fig_roi.update_layout(
+            title='Return on Investment by Utilisation Rate',
+            xaxis_title='Utilisation Rate',
+            yaxis_title='ROI (%)',
+            height=400
+        )
+        
+        st.plotly_chart(fig_roi, use_container_width=True)
+    
+    with tab2:
+        st.markdown("**Cash Flow Analysis**")
+        
+        cash_flow_df = pd.DataFrame(business_metrics['cash_flow_data'])
+        cash_flow_df['Monthly Cash Flow'] = cash_flow_df['Monthly Cash Flow'].apply(lambda x: f"£{x:,.0f}")
+        cash_flow_df['Annual Cash Flow'] = cash_flow_df['Annual Cash Flow'].apply(lambda x: f"£{x:,.0f}")
+        cash_flow_df['Monthly Profit'] = cash_flow_df['Monthly Profit'].apply(lambda x: f"£{x:,.0f}")
+        
+        st.dataframe(cash_flow_df, use_container_width=True)
+        
+        # Cash Flow Chart
+        monthly_cash_flows = [data['Monthly Cash Flow'] for data in business_metrics['cash_flow_data']]
+        utilisation_labels = [data['Utilisation'] for data in business_metrics['cash_flow_data']]
+        
+        fig_cashflow = go.Figure()
+        fig_cashflow.add_trace(go.Bar(
+            x=utilisation_labels,
+            y=monthly_cash_flows,
+            marker_color=['#059669' if cf > 0 else '#dc2626' for cf in monthly_cash_flows],
+            text=[f"£{cf:,.0f}" for cf in monthly_cash_flows],
+            textposition='auto'
+        ))
+        
+        fig_cashflow.update_layout(
+            title='Monthly Cash Flow by Utilisation Rate',
+            xaxis_title='Utilisation Rate',
+            yaxis_title='Monthly Cash Flow (£)',
+            height=400
+        )
+        
+        st.plotly_chart(fig_cashflow, use_container_width=True)
+    
+    with tab3:
+        st.markdown("**Sensitivity Analysis**")
+        st.markdown("How changes in revenue and costs affect profitability")
+        
+        sensitivity_df = pd.DataFrame(business_metrics['sensitivity_data'])
+        sensitivity_df['Adjusted Profit'] = sensitivity_df['Adjusted Profit'].apply(lambda x: f"£{x:,.0f}")
+        sensitivity_df['Profit Change %'] = sensitivity_df['Profit Change %'].apply(lambda x: f"{x:+.1f}%")
+        
+        st.dataframe(sensitivity_df, use_container_width=True)
+        
+        # Sensitivity Chart
+        scenarios = [data['Scenario'] for data in business_metrics['sensitivity_data']]
+        profit_changes = [data['Profit Change %'] for data in business_metrics['sensitivity_data']]
+        
+        fig_sensitivity = go.Figure()
+        fig_sensitivity.add_trace(go.Bar(
+            x=scenarios,
+            y=profit_changes,
+            marker_color=['#059669' if pc > 0 else '#dc2626' for pc in profit_changes],
+            text=[f"{pc:+.1f}%" for pc in profit_changes],
+            textposition='auto'
+        ))
+        
+        fig_sensitivity.update_layout(
+            title='Profit Sensitivity to Revenue and Cost Changes',
+            xaxis_title='Scenario',
+            yaxis_title='Profit Change (%)',
+            height=400,
+            xaxis_tickangle=-45
+        )
+        
+        st.plotly_chart(fig_sensitivity, use_container_width=True)
+    
+    with tab4:
+        st.markdown("**Risk Assessment - Scenario Analysis**")
+        
+        risk_metrics = business_metrics['risk_metrics']
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("**🔴 Worst Case (10% Utilisation)**")
+            worst = risk_metrics['Worst Case (10% Utilisation)']
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Annual Profit</h4>
+                <h3>£{worst['Annual Profit']:,.0f}</h3>
+                <p>ROI: {worst['ROI']:.1f}%</p>
+                <p>Payback: {worst['Payback Years']:.1f} years</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("**🟡 Expected Case (20% Utilisation)**")
+            expected = risk_metrics['Expected Case (20% Utilisation)']
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Annual Profit</h4>
+                <h3>£{expected['Annual Profit']:,.0f}</h3>
+                <p>ROI: {expected['ROI']:.1f}%</p>
+                <p>Payback: {expected['Payback Years']:.1f} years</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown("**🟢 Best Case (40% Utilisation)**")
+            best = risk_metrics['Best Case (40% Utilisation)']
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Annual Profit</h4>
+                <h3>£{best['Annual Profit']:,.0f}</h3>
+                <p>ROI: {best['ROI']:.1f}%</p>
+                <p>Payback: {best['Payback Years']:.1f} years</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Risk vs Reward Chart
+        scenarios = ['Worst Case', 'Expected Case', 'Best Case']
+        profits = [risk_metrics['Worst Case (10% Utilisation)']['Annual Profit'],
+                  risk_metrics['Expected Case (20% Utilisation)']['Annual Profit'],
+                  risk_metrics['Best Case (40% Utilisation)']['Annual Profit']]
+        rois = [risk_metrics['Worst Case (10% Utilisation)']['ROI'],
+                risk_metrics['Expected Case (20% Utilisation)']['ROI'],
+                risk_metrics['Best Case (40% Utilisation)']['ROI']]
+        
+        fig_risk = go.Figure()
+        fig_risk.add_trace(go.Scatter(
+            x=scenarios,
+            y=profits,
+            mode='lines+markers',
+            name='Annual Profit',
+            line=dict(color='#4f46e5', width=3),
+            marker=dict(size=10)
+        ))
+        
+        fig_risk.update_layout(
+            title='Risk vs Reward Analysis',
+            xaxis_title='Scenario',
+            yaxis_title='Annual Profit (£)',
+            height=400
+        )
+        
+        st.plotly_chart(fig_risk, use_container_width=True)
+    
+    with tab5:
+        st.markdown("**📊 Business Planning Summary**")
+        
+        # Key Investment Metrics
+        st.markdown("**Key Investment Metrics:**")
+        
+        expected_roi = business_metrics['roi_data'][1]['ROI']  # 20% utilisation
+        expected_payback = business_metrics['payback_data'][1]['Payback Years']
+        expected_cash_flow = business_metrics['cash_flow_data'][1]['Monthly Cash Flow']
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Expected ROI</h4>
+                <h2>{expected_roi:.1f}%</h2>
+                <p style="font-size: 0.8rem; color: #6b7280;">At 20% utilisation</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Payback Period</h4>
+                <h2>{expected_payback:.1f} years</h2>
+                <p style="font-size: 0.8rem; color: #6b7280;">Time to recover investment</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Monthly Cash Flow</h4>
+                <h2>£{expected_cash_flow:,.0f}</h2>
+                <p style="font-size: 0.8rem; color: #6b7280;">Net cash generation</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Business Planning Insights
+        st.markdown("""
+        <div style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #4f46e5;">
+            <h4>💡 Business Planning Insights:</h4>
+            <ul>
+                <li><strong>Investment Decision:</strong> Consider ROI above 15-20% as attractive for small business investments</li>
+                <li><strong>Cash Flow Management:</strong> Ensure positive monthly cash flow to cover operational expenses</li>
+                <li><strong>Risk Mitigation:</strong> Plan for worst-case scenarios and maintain adequate cash reserves</li>
+                <li><strong>Growth Planning:</strong> Use sensitivity analysis to understand key drivers of profitability</li>
+                <li><strong>Exit Strategy:</strong> Consider payback period when planning business exit or expansion</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Additional Considerations
+        st.markdown("**Additional Business Planning Considerations:**")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**📋 Legal & Compliance:**")
+            st.markdown("- Business registration and licensing")
+            st.markdown("- Insurance requirements")
+            st.markdown("- Tax obligations and VAT registration")
+            st.markdown("- Data protection compliance")
+            st.markdown("- Employment law considerations")
+        
+        with col2:
+            st.markdown("**🎯 Market & Competition:**")
+            st.markdown("- Market size and growth potential")
+            st.markdown("- Competitive landscape analysis")
+            st.markdown("- Customer acquisition strategy")
+            st.markdown("- Pricing strategy refinement")
+            st.markdown("- Marketing and branding approach")
+
+    with tab6:
+        st.markdown("**🏛️ VAT Analysis**")
+        st.markdown("""
+        <div style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #4f46e5;">
+            <h4>💰 VAT Overview:</h4>
+            <p>In the UK, the standard VAT rate is 20%. This means that for every £100 of revenue, £20 is VATable and £20 is VAT-exempt.</p>
+            <p><strong>Key VAT Terms:</strong></p>
+            <ul>
+                <li><strong>VATable Revenue:</strong> Revenue that is subject to VAT (e.g., drone rentals, website hosting)</li>
+                <li><strong>VAT-Exempt Revenue:</strong> Revenue that is not subject to VAT (e.g., legal fees, website setup)</li>
+                <li><strong>VAT-Deductible Costs:</strong> Business expenses that can be claimed back from HMRC (e.g., drone costs, website hosting)</li>
+                <li><strong>Net VAT Payable:</strong> The difference between VATable revenue and VAT-deductible costs.</li>
+                <li><strong>Profit After VAT:</strong> Your net profit after deducting VATable revenue and VAT-deductible costs.</li>
+            </ul>
+            <p><strong>VAT Registration Threshold:</strong> If your annual turnover exceeds £85,000, you must register for VAT. This is a one-time decision.</p>
+            <p><strong>VAT Registration Benefits:</strong></p>
+            <ul>
+                <li>Can claim back VAT on purchases (e.g., drones, website hosting)</li>
+                <li>Can reclaim VAT on business travel, utilities, and other operational costs</li>
+                <li>May be eligible for reduced rates on certain services</li>
+                <li>Can increase credibility with customers</li>
+            </ul>
+            <p><strong>VAT Registration Considerations:</strong></p>
+            <ul>
+                <li>Initial costs for registration and ongoing compliance</li>
+                <li>Need to maintain accurate records of all transactions</li>
+                <li>Must charge VAT on all VATable sales</li>
+                <li>Must account for VAT on all VAT-deductible expenses</li>
+                <li>May need to pay VAT quarterly to HMRC</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # VAT Summary Metrics
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>VAT Rate</h4>
+                <h2>{vat_analysis['vat_rate'] * 100:.0f}%</h2>
+                <p style="font-size: 0.8rem; color: #6b7280;">Standard UK VAT rate</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Net VAT Payable</h4>
+                <h2>£{vat_analysis['net_vat_payable']:,.0f}</h2>
+                <p style="font-size: 0.8rem; color: #6b7280;">Per rental day</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Profit After VAT</h4>
+                <h2>£{vat_analysis['profit_after_vat']:,.0f}</h2>
+                <p style="font-size: 0.8rem; color: #6b7280;">Per rental day</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # VAT Registration Analysis
+        st.markdown("**📋 VAT Registration Analysis**")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>Annual Revenue</h4>
+                <h3>£{vat_analysis['annual_revenue']:,.0f}</h3>
+                <p style="font-size: 0.8rem; color: #6b7280;">Total annual revenue</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>VAT Threshold</h4>
+                <h3>£{vat_analysis['vat_threshold']:,.0f}</h3>
+                <p style="font-size: 0.8rem; color: #6b7280;">Registration threshold</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            threshold_status = "✅ Must Register" if vat_analysis['annual_revenue'] >= vat_analysis['vat_threshold'] else "⏳ Below Threshold"
+            threshold_color = "#dc2626" if vat_analysis['annual_revenue'] >= vat_analysis['vat_threshold'] else "#059669"
+            st.markdown(f"""
+            <div class="metric-card" style="border-left-color: {threshold_color};">
+                <h4>Registration Status</h4>
+                <h3 style="color: {threshold_color};">{threshold_status}</h3>
+                <p style="font-size: 0.8rem; color: #6b7280;">
+                    {vat_analysis['months_to_threshold']:.0f} months to threshold
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # VAT Breakdown Table
+        st.markdown("**📊 VAT-Deductible Items Breakdown**")
+        
+        vat_breakdown_data = []
+        for item, vat_amount in vat_analysis['vat_deductible_items'].items():
+            if vat_amount > 0:  # Only show items with VAT
+                vat_breakdown_data.append({
+                    'Item': item,
+                    'VAT Amount (£)': f"£{vat_amount:,.2f}",
+                    'VAT Rate': "20%",
+                    'Deductible': "✅ Yes"
+                })
+        
+        # Add additional costs VAT
+        if vat_analysis['additional_costs_vat'] > 0:
+            vat_breakdown_data.append({
+                'Item': 'Additional Costs',
+                'VAT Amount (£)': f"£{vat_analysis['additional_costs_vat']:,.2f}",
+                'VAT Rate': "20%",
+                'Deductible': "✅ Yes"
+            })
+        
+        vat_df = pd.DataFrame(vat_breakdown_data)
+        st.dataframe(vat_df, use_container_width=True)
+        
+        # VAT Impact Analysis
+        st.markdown("**💡 VAT Impact Analysis**")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**VAT on Revenue:**")
+            st.markdown(f"- **Daily Revenue VAT:** £{vat_analysis['total_revenue_vat']:,.2f}")
+            st.markdown(f"- **Annual Revenue VAT:** £{vat_analysis['total_revenue_vat'] * 365:,.0f}")
+            st.markdown(f"- **VAT Rate Applied:** {vat_analysis['vat_rate'] * 100:.0f}%")
+        
+        with col2:
+            st.markdown("**VAT on Costs:**")
+            st.markdown(f"- **Total VAT Deductible:** £{vat_analysis['total_vat_deductible']:,.2f}")
+            st.markdown(f"- **Net VAT Payable:** £{vat_analysis['net_vat_payable']:,.2f}")
+            st.markdown(f"- **VAT Recovery Rate:** {(vat_analysis['total_vat_deductible'] / vat_analysis['total_revenue_vat'] * 100):.1f}%")
+
+        # VAT Planning Insights
+        st.markdown("""
+        <div style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #4f46e5;">
+            <h4>💡 VAT Planning Insights:</h4>
+            <ul>
+                <li><strong>VAT Registration Decision:</strong> If your annual revenue exceeds £85,000, you must register for VAT. This is a one-time decision.</li>
+                <li><strong>VAT-Deductible Costs:</strong> Ensure all business expenses are VAT-deductible to reduce your net VAT payable.</li>
+                <li><strong>VAT on Revenue:</strong> Always charge VAT on VATable revenue (e.g., drone rentals, website hosting).</li>
+                <li><strong>Quarterly VAT Payments:</strong> If you register for VAT, you must pay VAT quarterly to HMRC.</li>
+                <li><strong>VAT Refunds:</strong> If you register for VAT, you can claim back VAT on purchases and certain operational costs.</li>
+                <li><strong>VAT Recovery:</strong> Your current VAT recovery rate shows how much VAT you can claim back on business expenses.</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # VAT Charts
+        st.markdown("**📈 VAT Visualization**")
+        
+        chart_col1, chart_col2 = st.columns(2)
+        
+        with chart_col1:
+            # VAT Composition Chart
+            vat_composition = {
+                'VAT on Revenue': vat_analysis['total_revenue_vat'],
+                'VAT Deductible': vat_analysis['total_vat_deductible'],
+                'Net VAT Payable': vat_analysis['net_vat_payable']
+            }
+            
+            fig_vat = px.pie(
+                values=list(vat_composition.values()),
+                names=list(vat_composition.keys()),
+                title='VAT Composition',
+                color_discrete_sequence=['#4f46e5', '#059669', '#dc2626']
+            )
+            fig_vat.update_layout(height=400)
+            st.plotly_chart(fig_vat, use_container_width=True)
+        
+        with chart_col2:
+            # VAT Impact on Profit
+            profit_comparison = {
+                'Profit Before VAT': vat_analysis['profit_before_vat'],
+                'VAT Payable': vat_analysis['net_vat_payable'],
+                'Profit After VAT': vat_analysis['profit_after_vat']
+            }
+            
+            fig_profit = go.Figure()
+            fig_profit.add_trace(go.Bar(
+                x=list(profit_comparison.keys()),
+                y=list(profit_comparison.values()),
+                marker_color=['#4f46e5', '#dc2626', '#059669'],
+                text=[f"£{v:,.0f}" for v in profit_comparison.values()],
+                textposition='auto'
+            ))
+            
+            fig_profit.update_layout(
+                title='VAT Impact on Daily Profit',
+                yaxis_title='Amount (£)',
+                height=400
+            )
+            
+            st.plotly_chart(fig_profit, use_container_width=True)
 
 else:
     st.warning("Please adjust the rental mix percentages to equal 100% to see calculations.")
