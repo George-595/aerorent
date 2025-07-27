@@ -173,9 +173,9 @@ with col1:
     mix_col1, mix_col2, mix_col3 = st.columns(3)
     
     with mix_col1:
-        mix_daily = st.number_input("Daily", min_value=0.0, max_value=100.0, value=40.0, step=5.0, key="mix_daily")
+        mix_daily = st.number_input("Daily", min_value=0.0, max_value=100.0, value=20.0, step=5.0, key="mix_daily")
     with mix_col2:
-        mix_weekend = st.number_input("Weekend", min_value=0.0, max_value=100.0, value=40.0, step=5.0, key="mix_weekend")
+        mix_weekend = st.number_input("Weekend", min_value=0.0, max_value=100.0, value=60.0, step=5.0, key="mix_weekend")
     with mix_col3:
         mix_weekly = st.number_input("Weekly", min_value=0.0, max_value=100.0, value=20.0, step=5.0, key="mix_weekly")
     
