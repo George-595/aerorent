@@ -389,9 +389,47 @@ def create_export_data(results):
         'cost_breakdown': pd.DataFrame(cost_breakdown_data)
     }
 
-# Calculate and display results
 if mix_total == 100.0:
     results = calculate_financials()
+    
+    with col2:
+        st.subheader("5. Key Metrics")
+        
+        # Key metrics cards
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Total First-Year Costs</h4>
+            <h2>£{results['total_first_year_costs']:,.2f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Avg. Revenue per Day</h4>
+            <h2>£{results['weighted_avg_revenue']:.2f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Contribution Margin</h4>
+            <h2>£{results['contribution_margin']:.2f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div class="metric-card break-even-highlight">
+            <h4>Break-Even Days</h4>
+            <h2>{results['break_even_days']:.0f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div class="metric-card break-even-highlight">
+            <h4>Break-Even Utilisation</h4>
+            <h2>{results['break_even_utilisation']:.1f}%</h2>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Download section
     st.markdown("---")
@@ -448,9 +486,9 @@ if mix_total == 100.0:
     )
     
     # Individual section downloads
-    col1, col2 = st.columns(2)
+    download_col1, download_col2 = st.columns(2)
     
-    with col1:
+    with download_col1:
         st.download_button(
             label="📋 Download Input Parameters",
             data=export_data['inputs'].to_csv(index=False),
@@ -465,7 +503,7 @@ if mix_total == 100.0:
             mime="text/csv"
         )
     
-    with col2:
+    with download_col2:
         st.download_button(
             label="🎯 Download Key Metrics",
             data=export_data['metrics'].to_csv(index=False),
@@ -482,45 +520,6 @@ if mix_total == 100.0:
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    with col2:
-        st.subheader("5. Key Metrics")
-        
-        # Key metrics cards
-        st.markdown(f"""
-        <div class="metric-card">
-            <h4>Total First-Year Costs</h4>
-            <h2>£{results['total_first_year_costs']:,.2f}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="metric-card">
-            <h4>Avg. Revenue per Day</h4>
-            <h2>£{results['weighted_avg_revenue']:.2f}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="metric-card">
-            <h4>Contribution Margin</h4>
-            <h2>£{results['contribution_margin']:.2f}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="metric-card break-even-highlight">
-            <h4>Break-Even Days</h4>
-            <h2>{results['break_even_days']:.0f}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="metric-card break-even-highlight">
-            <h4>Break-Even Utilisation</h4>
-            <h2>{results['break_even_utilisation']:.1f}%</h2>
-        </div>
-        """, unsafe_allow_html=True)
-
     # Projections table
     st.subheader("6. Annual Projections")
     
@@ -557,8 +556,65 @@ if mix_total == 100.0:
     styled_df = df_projections.style.applymap(color_profit, subset=['Annual Profit'])
     st.dataframe(styled_df, use_container_width=True)
     
+    # Monthly Revenue Projections Section
+    st.subheader("7. Monthly Revenue Projections")
+    
+    def calculate_monthly_projection(utilisation):
+        rental_days = results['total_available_days'] * (utilisation / 100.0)
+        total_revenue = rental_days * results['weighted_avg_revenue']
+        total_variable_costs = rental_days * results['variable_cost_per_rental']
+        profit = total_revenue - results['opex'] - total_variable_costs - results['capex']
+        
+        # Calculate monthly values
+        monthly_revenue = total_revenue / 12.0
+        monthly_profit = profit / 12.0
+        monthly_rental_days = rental_days / 12.0
+        
+        return {
+            'monthly_revenue': monthly_revenue,
+            'monthly_profit': monthly_profit,
+            'monthly_rental_days': monthly_rental_days,
+            'annual_revenue': total_revenue,
+            'annual_profit': profit
+        }
+    
+    # Calculate projections for specified utilisation rates
+    monthly_projections_data = []
+    target_utilisation_rates = [15, 20, 30]
+    
+    for util in target_utilisation_rates:
+        proj = calculate_monthly_projection(util)
+        monthly_projections_data.append({
+            'Utilisation Rate': f"{util}%",
+            'Monthly Revenue': f"£{proj['monthly_revenue']:,.0f}",
+            'Monthly Profit': f"£{proj['monthly_profit']:,.0f}",
+            'Monthly Rental Days': f"{proj['monthly_rental_days']:.1f}",
+            'Annual Revenue': f"£{proj['annual_revenue']:,.0f}",
+            'Annual Profit': f"£{proj['annual_profit']:,.0f}",
+            'Profit_Margin': proj['monthly_profit']
+        })
+    
+    df_monthly_projections = pd.DataFrame(monthly_projections_data)
+    
+    # Style the monthly projections dataframe
+    styled_monthly_df = df_monthly_projections.style.applymap(color_profit, subset=['Monthly Profit'])
+    st.dataframe(styled_monthly_df, use_container_width=True)
+    
+    # Add explanatory text
+    st.markdown("""
+    <div style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #4f46e5;">
+        <h4>📊 Monthly Revenue Insights:</h4>
+        <ul>
+            <li><strong>15% Utilisation:</strong> Conservative estimate for initial market entry</li>
+            <li><strong>20% Utilisation:</strong> Realistic target for established operations</li>
+            <li><strong>30% Utilisation:</strong> Optimistic scenario with strong market demand</li>
+        </ul>
+        <p><em>Note: Monthly profit excludes initial capital expenditure (one-time cost).</em></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     # Cost Breakdown Section
-    st.subheader("7. Cost Breakdown")
+    st.subheader("8. Cost Breakdown")
     
     # Calculate costs
     capex = results['capex']
@@ -610,7 +666,7 @@ if mix_total == 100.0:
         st.markdown(f"- Repairs & Supplies: £{(repairs_cost + shipping_supplies_cost) / 12:,.2f}")
     
     # Charts
-    st.subheader("8. Visual Analysis")
+    st.subheader("9. Visual Analysis")
     
     chart_col1, chart_col2 = st.columns(2)
     
