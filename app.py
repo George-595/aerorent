@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
+import io
 
 # Page configuration
 st.set_page_config(
@@ -45,6 +46,14 @@ st.markdown("""
     .profit-negative {
         color: #dc2626;
     }
+    .download-section {
+        background-color: #f8fafc;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 2px dashed #cbd5e1;
+        text-align: center;
+        margin: 1rem 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -61,33 +70,33 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        flip_qty = st.number_input("DJI Flips (Qty)", min_value=0, value=3, step=1)
-        mini4_qty = st.number_input("DJI Mini 4 Pros (Qty)", min_value=0, value=1, step=1)
-        case_cost = st.number_input("Hard Cases Cost (£)", min_value=0, value=200, step=10)
-        battery_cost = st.number_input("Extra Batteries Cost (£)", min_value=0, value=236, step=10)
-        filter_cost = st.number_input("ND Filters Cost (£)", min_value=0, value=180, step=10)
+        flip_qty = st.number_input("DJI Flips (Qty)", min_value=0.0, value=3.0, step=1.0)
+        mini4_qty = st.number_input("DJI Mini 4 Pros (Qty)", min_value=0.0, value=1.0, step=1.0)
+        case_cost = st.number_input("Hard Cases Cost (£)", min_value=0.0, value=200.0, step=10.0)
+        battery_cost = st.number_input("Extra Batteries Cost (£)", min_value=0.0, value=236.0, step=10.0)
+        filter_cost = st.number_input("ND Filters Cost (£)", min_value=0.0, value=180.0, step=10.0)
     
     with col2:
-        flip_cost = st.number_input("DJI Flip Cost (£)", min_value=0, value=659, step=10)
-        mini4_cost = st.number_input("DJI Mini 4 Pro Cost (£)", min_value=0, value=979, step=10)
-        web_cost = st.number_input("Website Setup Cost (£)", min_value=0, value=2500, step=100)
-        legal_cost = st.number_input("Legal Fees (£)", min_value=0, value=500, step=50)
+        flip_cost = st.number_input("DJI Flip Cost (£)", min_value=0.0, value=659.0, step=10.0)
+        mini4_cost = st.number_input("DJI Mini 4 Pro Cost (£)", min_value=0.0, value=979.0, step=10.0)
+        web_cost = st.number_input("Website Setup Cost (£)", min_value=0.0, value=2500.0, step=100.0)
+        legal_cost = st.number_input("Legal Fees (£)", min_value=0.0, value=500.0, step=50.0)
     
     # Operational Expenditure
     st.subheader("2. Annual Operational Costs")
     
     col1, col2 = st.columns(2)
     with col1:
-        platform_cost = st.number_input("E-commerce Platform (£)", min_value=0, value=228, step=10)
-        insurance_cost = st.number_input("Corporate Insurance (£)", min_value=0, value=750, step=50)
-        marketing_cost = st.number_input("Digital Marketing (£)", min_value=0, value=6000, step=500)
-        shipping_supplies_cost = st.number_input("Shipping Supplies (£)", min_value=0, value=1200, step=100)
+        platform_cost = st.number_input("E-commerce Platform (£)", min_value=0.0, value=228.0, step=10.0)
+        insurance_cost = st.number_input("Corporate Insurance (£)", min_value=0.0, value=750.0, step=50.0)
+        marketing_cost = st.number_input("Digital Marketing (£)", min_value=0.0, value=6000.0, step=500.0)
+        shipping_supplies_cost = st.number_input("Shipping Supplies (£)", min_value=0.0, value=1200.0, step=100.0)
     
     with col2:
-        domain_cost = st.number_input("Domain & Hosting (£)", min_value=0, value=30, step=5)
+        domain_cost = st.number_input("Domain & Hosting (£)", min_value=0.0, value=30.0, step=5.0)
         caa_cost = st.number_input("CAA Renewal (£)", min_value=0.0, value=11.79, step=1.0)
-        repairs_cost = st.number_input("Repairs & Maintenance (£)", min_value=0, value=295.60, step=10)
-        shipping_cost = st.number_input("Shipping Cost per Rental (£)", min_value=0, value=32, step=1)
+        repairs_cost = st.number_input("Repairs & Maintenance (£)", min_value=0.0, value=295.60, step=10.0)
+        shipping_cost = st.number_input("Shipping Cost per Rental (£)", min_value=0.0, value=32.0, step=1.0)
     
     processing_fee = st.number_input("Payment Processing Fee (%)", min_value=0.0, value=1.5, step=0.1)
 
@@ -102,30 +111,30 @@ with col1:
     
     with pricing_col1:
         st.markdown("**DJI Flip Pricing (£)**")
-        flip_daily = st.number_input("Daily Hire", min_value=0, value=49, step=1, key="flip_daily")
-        flip_weekend = st.number_input("Weekend Hire", min_value=0, value=85, step=1, key="flip_weekend")
-        flip_weekly = st.number_input("Weekly Hire", min_value=0, value=165, step=5, key="flip_weekly")
+        flip_daily = st.number_input("Daily Hire", min_value=0.0, value=49.0, step=1.0, key="flip_daily")
+        flip_weekend = st.number_input("Weekend Hire", min_value=0.0, value=85.0, step=1.0, key="flip_weekend")
+        flip_weekly = st.number_input("Weekly Hire", min_value=0.0, value=165.0, step=5.0, key="flip_weekly")
     
     with pricing_col2:
         st.markdown("**DJI Mini 4 Pro Pricing (£)**")
-        mini4_daily = st.number_input("Daily Hire", min_value=0, value=65, step=1, key="mini4_daily")
-        mini4_weekend = st.number_input("Weekend Hire", min_value=0, value=109, step=1, key="mini4_weekend")
-        mini4_weekly = st.number_input("Weekly Hire", min_value=0, value=210, step=5, key="mini4_weekly")
+        mini4_daily = st.number_input("Daily Hire", min_value=0.0, value=65.0, step=1.0, key="mini4_daily")
+        mini4_weekend = st.number_input("Weekend Hire", min_value=0.0, value=109.0, step=1.0, key="mini4_weekend")
+        mini4_weekly = st.number_input("Weekly Hire", min_value=0.0, value=210.0, step=5.0, key="mini4_weekly")
     
     # Rental Mix
     st.markdown("**Rental Mix Assumption (%)**")
     mix_col1, mix_col2, mix_col3 = st.columns(3)
     
     with mix_col1:
-        mix_daily = st.number_input("Daily", min_value=0, max_value=100, value=40, step=5, key="mix_daily")
+        mix_daily = st.number_input("Daily", min_value=0.0, max_value=100.0, value=40.0, step=5.0, key="mix_daily")
     with mix_col2:
-        mix_weekend = st.number_input("Weekend", min_value=0, max_value=100, value=40, step=5, key="mix_weekend")
+        mix_weekend = st.number_input("Weekend", min_value=0.0, max_value=100.0, value=40.0, step=5.0, key="mix_weekend")
     with mix_col3:
-        mix_weekly = st.number_input("Weekly", min_value=0, max_value=100, value=20, step=5, key="mix_weekly")
+        mix_weekly = st.number_input("Weekly", min_value=0.0, max_value=100.0, value=20.0, step=5.0, key="mix_weekly")
     
     # Validate rental mix
     mix_total = mix_daily + mix_weekend + mix_weekly
-    if mix_total != 100:
+    if mix_total != 100.0:
         st.error(f"⚠️ Rental mix percentages add up to {mix_total}%. Must equal 100%.")
     else:
         st.success("✅ Rental mix percentages are valid!")
@@ -141,9 +150,9 @@ def calculate_financials():
     total_first_year_costs = capex + opex
     
     # Revenue & Margin
-    mix_daily_pct = mix_daily / 100
-    mix_weekend_pct = mix_weekend / 100
-    mix_weekly_pct = mix_weekly / 100
+    mix_daily_pct = mix_daily / 100.0
+    mix_weekend_pct = mix_weekend / 100.0
+    mix_weekly_pct = mix_weekly / 100.0
     
     flip_avg_rev = (flip_daily * mix_daily_pct) + (flip_weekend * mix_weekend_pct) + (flip_weekly * mix_weekly_pct)
     mini4_avg_rev = (mini4_daily * mix_daily_pct) + (mini4_weekend * mix_weekend_pct) + (mini4_weekly * mix_weekly_pct)
@@ -153,14 +162,14 @@ def calculate_financials():
     
     weighted_avg_revenue = (flip_avg_rev * flip_ratio) + (mini4_avg_rev * mini4_ratio)
     
-    processing_cost = weighted_avg_revenue * (processing_fee / 100)
+    processing_cost = weighted_avg_revenue * (processing_fee / 100.0)
     variable_cost_per_rental = shipping_cost + processing_cost
     contribution_margin = weighted_avg_revenue - variable_cost_per_rental
     
     # Break-Even Analysis
     break_even_days = total_first_year_costs / contribution_margin if contribution_margin > 0 else 0
     total_available_days = total_drones * 365
-    break_even_utilisation = (break_even_days / total_available_days * 100) if total_available_days > 0 else 0
+    break_even_utilisation = (break_even_days / total_available_days * 100.0) if total_available_days > 0 else 0
     
     return {
         'total_first_year_costs': total_first_year_costs,
@@ -175,9 +184,208 @@ def calculate_financials():
         'capex': capex
     }
 
+# Function to create comprehensive data export
+def create_export_data(results):
+    # Create multiple dataframes for different sections
+    
+    # 1. Input Parameters
+    inputs_data = {
+        'Category': [
+            'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure',
+            'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure',
+            'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
+            'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
+            'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy',
+            'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy',
+            'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy'
+        ],
+        'Parameter': [
+            'DJI Flips Quantity', 'DJI Flip Cost per Unit', 'DJI Mini 4 Pros Quantity', 'DJI Mini 4 Pro Cost per Unit',
+            'Hard Cases Cost', 'Extra Batteries Cost', 'ND Filters Cost', 'Website Setup Cost',
+            'E-commerce Platform', 'Domain & Hosting', 'Corporate Insurance', 'CAA Renewal',
+            'Digital Marketing', 'Repairs & Maintenance', 'Shipping Supplies', 'Shipping Cost per Rental',
+            'DJI Flip Daily Price', 'DJI Flip Weekend Price', 'DJI Flip Weekly Price',
+            'DJI Mini 4 Pro Daily Price', 'DJI Mini 4 Pro Weekend Price', 'DJI Mini 4 Pro Weekly Price',
+            'Rental Mix Daily %', 'Rental Mix Weekend %', 'Rental Mix Weekly %', 'Payment Processing Fee %',
+            'Legal Fees'
+        ],
+        'Value': [
+            flip_qty, flip_cost, mini4_qty, mini4_cost,
+            case_cost, battery_cost, filter_cost, web_cost,
+            platform_cost, domain_cost, insurance_cost, caa_cost,
+            marketing_cost, repairs_cost, shipping_supplies_cost, shipping_cost,
+            flip_daily, flip_weekend, flip_weekly,
+            mini4_daily, mini4_weekend, mini4_weekly,
+            mix_daily, mix_weekend, mix_weekly, processing_fee,
+            legal_cost
+        ],
+        'Unit': [
+            'units', '£', 'units', '£',
+            '£', '£', '£', '£',
+            '£', '£', '£', '£',
+            '£', '£', '£', '£',
+            '£', '£', '£',
+            '£', '£', '£',
+            '%', '%', '%', '%',
+            '£'
+        ]
+    }
+    
+    # 2. Key Metrics
+    metrics_data = {
+        'Metric': [
+            'Total First-Year Costs', 'Weighted Average Revenue per Day', 'Contribution Margin per Day',
+            'Break-Even Days', 'Break-Even Utilisation Rate', 'Total Drones', 'Total Available Days',
+            'Variable Cost per Rental', 'Annual Operational Costs', 'Capital Expenditure'
+        ],
+        'Value': [
+            results['total_first_year_costs'], results['weighted_avg_revenue'], results['contribution_margin'],
+            results['break_even_days'], results['break_even_utilisation'], results['total_drones'],
+            results['total_available_days'], results['variable_cost_per_rental'], results['opex'], results['capex']
+        ],
+        'Unit': [
+            '£', '£', '£', 'days', '%', 'units', 'days', '£', '£', '£'
+        ]
+    }
+    
+    # 3. Detailed Projections
+    def calculate_projection(utilisation):
+        rental_days = results['total_available_days'] * (utilisation / 100.0)
+        total_revenue = rental_days * results['weighted_avg_revenue']
+        total_variable_costs = rental_days * results['variable_cost_per_rental']
+        profit = total_revenue - results['opex'] - total_variable_costs - results['capex']
+        return {'revenue': total_revenue, 'profit': profit, 'rental_days': rental_days}
+    
+    utilisation_rates = [10, 15, 20, 25, 30, 35, 40, 45, 50]
+    projections_data = []
+    
+    for util in utilisation_rates:
+        proj = calculate_projection(util)
+        projections_data.append({
+            'Utilisation Rate (%)': util,
+            'Rental Days': proj['rental_days'],
+            'Annual Revenue (£)': proj['revenue'],
+            'Annual Profit (£)': proj['profit'],
+            'Profit Margin (%)': (proj['profit'] / proj['revenue'] * 100.0) if proj['revenue'] > 0 else 0
+        })
+    
+    # 4. Cost Breakdown
+    cost_breakdown_data = {
+        'Cost Category': [
+            'DJI Flips', 'DJI Mini 4 Pros', 'Accessories (Cases, Batteries, Filters)',
+            'Website & Legal', 'E-commerce Platform', 'Domain & Hosting', 'Insurance & CAA',
+            'Marketing', 'Repairs & Maintenance', 'Shipping Supplies'
+        ],
+        'Amount (£)': [
+            flip_qty * flip_cost, mini4_qty * mini4_cost, case_cost + battery_cost + filter_cost,
+            web_cost + legal_cost, platform_cost, domain_cost, insurance_cost + caa_cost,
+            marketing_cost, repairs_cost, shipping_supplies_cost
+        ],
+        'Type': [
+            'Capital', 'Capital', 'Capital', 'Capital',
+            'Operational', 'Operational', 'Operational', 'Operational', 'Operational', 'Operational'
+        ]
+    }
+    
+    return {
+        'inputs': pd.DataFrame(inputs_data),
+        'metrics': pd.DataFrame(metrics_data),
+        'projections': pd.DataFrame(projections_data),
+        'cost_breakdown': pd.DataFrame(cost_breakdown_data)
+    }
+
 # Calculate and display results
-if mix_total == 100:
+if mix_total == 100.0:
     results = calculate_financials()
+    
+    # Download section
+    st.markdown("---")
+    st.markdown('<div class="download-section">', unsafe_allow_html=True)
+    st.subheader("📥 Download Financial Data")
+    st.markdown("Export all pricing, inputs, and financial projections for analysis")
+    
+    # Create export data
+    export_data = create_export_data(results)
+    
+    # Create a comprehensive CSV with all data
+    def create_comprehensive_csv():
+        output = io.StringIO()
+        
+        # Write header
+        output.write("AERORENT UK - FINANCIAL CALCULATOR EXPORT\n")
+        output.write(f"Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}\n")
+        output.write("=" * 50 + "\n\n")
+        
+        # Write inputs
+        output.write("INPUT PARAMETERS\n")
+        output.write("-" * 20 + "\n")
+        export_data['inputs'].to_csv(output, index=False)
+        output.write("\n\n")
+        
+        # Write key metrics
+        output.write("KEY METRICS\n")
+        output.write("-" * 12 + "\n")
+        export_data['metrics'].to_csv(output, index=False)
+        output.write("\n\n")
+        
+        # Write projections
+        output.write("ANNUAL PROJECTIONS\n")
+        output.write("-" * 18 + "\n")
+        export_data['projections'].to_csv(output, index=False)
+        output.write("\n\n")
+        
+        # Write cost breakdown
+        output.write("COST BREAKDOWN\n")
+        output.write("-" * 14 + "\n")
+        export_data['cost_breakdown'].to_csv(output, index=False)
+        
+        return output.getvalue()
+    
+    csv_data = create_comprehensive_csv()
+    
+    # Download button
+    st.download_button(
+        label="📊 Download Complete Financial Report (CSV)",
+        data=csv_data,
+        file_name=f"aerorent_financial_report_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+        mime="text/csv",
+        help="Download all pricing, inputs, and financial projections as a comprehensive CSV file"
+    )
+    
+    # Individual section downloads
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.download_button(
+            label="📋 Download Input Parameters",
+            data=export_data['inputs'].to_csv(index=False),
+            file_name=f"aerorent_inputs_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            mime="text/csv"
+        )
+        
+        st.download_button(
+            label="📈 Download Projections",
+            data=export_data['projections'].to_csv(index=False),
+            file_name=f"aerorent_projections_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            mime="text/csv"
+        )
+    
+    with col2:
+        st.download_button(
+            label="🎯 Download Key Metrics",
+            data=export_data['metrics'].to_csv(index=False),
+            file_name=f"aerorent_metrics_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            mime="text/csv"
+        )
+        
+        st.download_button(
+            label="💰 Download Cost Breakdown",
+            data=export_data['cost_breakdown'].to_csv(index=False),
+            file_name=f"aerorent_costs_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            mime="text/csv"
+        )
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
         st.subheader("4. Key Metrics")
@@ -222,7 +430,7 @@ if mix_total == 100:
     st.subheader("5. Annual Projections")
     
     def calculate_projection(utilisation):
-        rental_days = results['total_available_days'] * (utilisation / 100)
+        rental_days = results['total_available_days'] * (utilisation / 100.0)
         total_revenue = rental_days * results['weighted_avg_revenue']
         total_variable_costs = rental_days * results['variable_cost_per_rental']
         profit = total_revenue - results['opex'] - total_variable_costs - results['capex']
