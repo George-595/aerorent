@@ -82,6 +82,14 @@ with st.sidebar:
         web_cost = st.number_input("Website Setup Cost (£)", min_value=0.0, value=0.0, step=100.0)
         legal_cost = st.number_input("Legal Fees (£)", min_value=0.0, value=100.0, step=50.0)
     
+    # SD Cards (1 per drone)
+    total_drones_for_sd = flip_qty + mini4_qty
+    sd_card_cost_per_unit = 38.99
+    total_sd_card_cost = total_drones_for_sd * sd_card_cost_per_unit
+    
+    if total_drones_for_sd > 0:
+        st.markdown(f"**SD Cards**: {total_drones_for_sd} × £{sd_card_cost_per_unit} = £{total_sd_card_cost:.2f}**")
+    
     # Operational Expenditure
     st.subheader("2. Annual Operational Costs")
     
@@ -192,6 +200,11 @@ def calculate_financials():
     total_drones = flip_qty + mini4_qty
     capex = (flip_qty * flip_cost) + (mini4_qty * mini4_cost) + case_cost + battery_cost + filter_cost + web_cost + legal_cost
     
+    # SD Cards (1 per drone)
+    sd_card_cost_per_unit = 38.99
+    total_sd_card_cost = total_drones * sd_card_cost_per_unit
+    capex += total_sd_card_cost
+    
     # Additional Costs
     additional_costs_total = sum(cost["amount"] for cost in st.session_state.get('additional_costs', []))
     
@@ -247,7 +260,7 @@ def create_export_data(results):
         'Category': [
             'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure',
             'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure',
-            'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
+            'Capital Expenditure', 'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
             'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
             'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy',
             'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy',
@@ -256,7 +269,7 @@ def create_export_data(results):
         'Parameter': [
             'DJI Flips Quantity', 'DJI Flip Cost per Unit', 'DJI Mini 4 Pros Quantity', 'DJI Mini 4 Pro Cost per Unit',
             'Hard Cases Cost', 'Extra Batteries Cost', 'ND Filters Cost', 'Website Setup Cost',
-            'E-commerce Platform', 'Domain & Hosting', 'Corporate Insurance', 'CAA Renewal',
+            'SD Cards Cost', 'E-commerce Platform', 'Domain & Hosting', 'Corporate Insurance', 'CAA Renewal',
             'Digital Marketing', 'Repairs & Maintenance', 'Shipping Supplies', 'Shipping Cost per Rental',
             'DJI Flip Daily Price', 'DJI Flip Weekend Price', 'DJI Flip Weekly Price',
             'DJI Mini 4 Pro Daily Price', 'DJI Mini 4 Pro Weekend Price', 'DJI Mini 4 Pro Weekly Price',
@@ -266,7 +279,7 @@ def create_export_data(results):
         'Value': [
             flip_qty, flip_cost, mini4_qty, mini4_cost,
             case_cost, battery_cost, filter_cost, web_cost,
-            platform_cost, domain_cost, insurance_cost, caa_cost,
+            (flip_qty + mini4_qty) * 38.99, platform_cost, domain_cost, insurance_cost, caa_cost,
             marketing_cost, repairs_cost, shipping_supplies_cost, shipping_cost,
             flip_daily, flip_weekend, flip_weekly,
             mini4_daily, mini4_weekend, mini4_weekly,
@@ -334,17 +347,17 @@ def create_export_data(results):
     # 4. Cost Breakdown
     cost_breakdown_data = {
         'Cost Category': [
-            'DJI Flips', 'DJI Mini 4 Pros', 'Accessories (Cases, Batteries, Filters)',
+            'DJI Flips', 'DJI Mini 4 Pros', 'SD Cards', 'Accessories (Cases, Batteries, Filters)',
             'Website & Legal', 'E-commerce Platform', 'Domain & Hosting', 'Insurance & CAA',
             'Marketing', 'Repairs & Maintenance', 'Shipping Supplies'
         ],
         'Amount (£)': [
-            flip_qty * flip_cost, mini4_qty * mini4_cost, case_cost + battery_cost + filter_cost,
+            flip_qty * flip_cost, mini4_qty * mini4_cost, (flip_qty + mini4_qty) * 38.99, case_cost + battery_cost + filter_cost,
             web_cost + legal_cost, platform_cost, domain_cost, insurance_cost + caa_cost,
             marketing_cost, repairs_cost, shipping_supplies_cost
         ],
         'Type': [
-            'Capital', 'Capital', 'Capital', 'Capital',
+            'Capital', 'Capital', 'Capital', 'Capital', 'Capital',
             'Operational', 'Operational', 'Operational', 'Operational', 'Operational', 'Operational'
         ]
     }
