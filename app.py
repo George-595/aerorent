@@ -72,7 +72,7 @@ with st.sidebar:
     with col1:
         flip_qty = st.number_input("DJI Flips (Qty)", min_value=0.0, value=3.0, step=1.0)
         mini4_qty = st.number_input("DJI Mini 4 Pros (Qty)", min_value=0.0, value=1.0, step=1.0)
-        case_cost = st.number_input("Hard Cases Cost (£)", min_value=0.0, value=0.0, step=10.0)
+        case_cost_per_unit = st.number_input("Hard Case Cost per Unit (£)", min_value=0.0, value=45.0, step=10.0)
         battery_cost = st.number_input("Extra Batteries Cost (£)", min_value=0.0, value=0.0, step=10.0)
         filter_cost = st.number_input("ND Filters Cost (£)", min_value=0.0, value=0.0, step=10.0)
     
@@ -89,6 +89,12 @@ with st.sidebar:
     
     if total_drones_for_sd > 0:
         st.markdown(f"**SD Cards**: {total_drones_for_sd} × £{sd_card_cost_per_unit} = £{total_sd_card_cost:.2f}**")
+    
+    # Hard Cases (1 per drone)
+    total_hard_cases_cost = total_drones_for_sd * case_cost_per_unit
+    
+    if total_drones_for_sd > 0 and case_cost_per_unit > 0:
+        st.markdown(f"**Hard Cases**: {total_drones_for_sd} × £{case_cost_per_unit} = £{total_hard_cases_cost:.2f}**")
     
     # Operational Expenditure
     st.subheader("2. Annual Operational Costs")
@@ -207,7 +213,7 @@ with col1:
 def calculate_financials():
     # Capital Expenditure
     total_drones = flip_qty + mini4_qty
-    capex = (flip_qty * flip_cost) + (mini4_qty * mini4_cost) + case_cost + battery_cost + filter_cost + web_cost + legal_cost
+    capex = (flip_qty * flip_cost) + (mini4_qty * mini4_cost) + total_hard_cases_cost + battery_cost + filter_cost + web_cost + legal_cost
     
     # SD Cards (1 per drone)
     sd_card_cost_per_unit = 38.99
@@ -269,7 +275,7 @@ def create_export_data(results):
         'Category': [
             'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure',
             'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure', 'Capital Expenditure',
-            'Capital Expenditure', 'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
+            'Capital Expenditure', 'Capital Expenditure', 'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
             'Operational Costs', 'Operational Costs', 'Operational Costs', 'Operational Costs',
             'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy',
             'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy', 'Pricing Strategy',
@@ -277,23 +283,21 @@ def create_export_data(results):
         ],
         'Parameter': [
             'DJI Flips Quantity', 'DJI Flip Cost per Unit', 'DJI Mini 4 Pros Quantity', 'DJI Mini 4 Pro Cost per Unit',
-            'Hard Cases Cost', 'Extra Batteries Cost', 'ND Filters Cost', 'Website Setup Cost',
-            'SD Cards Cost', 'E-commerce Platform', 'Domain & Hosting', 'Corporate Insurance', 'CAA Renewal',
-            'Digital Marketing', 'Repairs & Maintenance', 'Shipping Supplies', 'Shipping Cost per Rental',
-            'DJI Flip Daily Price', 'DJI Flip Weekend Price', 'DJI Flip Weekly Price',
+            'Hard Case Cost per Unit', 'Extra Batteries Cost', 'ND Filters Cost', 'Website Setup Cost',
+            'SD Cards Cost', 'Legal Fees', 'E-commerce Platform', 'Domain & Hosting',
+            'Corporate Insurance', 'CAA Renewal', 'Digital Marketing', 'Repairs & Maintenance', 'Shipping Supplies',
+            'Shipping Cost per Rental', 'DJI Flip Daily Price', 'DJI Flip Weekend Price', 'DJI Flip Weekly Price',
             'DJI Mini 4 Pro Daily Price', 'DJI Mini 4 Pro Weekend Price', 'DJI Mini 4 Pro Weekly Price',
-            'Rental Mix Daily %', 'Rental Mix Weekend %', 'Rental Mix Weekly %', 'Payment Processing Fee %',
-            'Legal Fees'
+            'Rental Mix Daily %', 'Rental Mix Weekend %', 'Rental Mix Weekly %', 'Payment Processing Fee %'
         ],
         'Value': [
             flip_qty, flip_cost, mini4_qty, mini4_cost,
-            case_cost, battery_cost, filter_cost, web_cost,
-            (flip_qty + mini4_qty) * 38.99, platform_cost, domain_cost, insurance_cost, caa_cost,
-            marketing_cost, repairs_cost, shipping_cost, total_shipping_cost_per_rental,
+            case_cost_per_unit, battery_cost, filter_cost, web_cost,
+            (flip_qty + mini4_qty) * 38.99, legal_cost, platform_cost, domain_cost,
+            insurance_cost, caa_cost, marketing_cost, repairs_cost, shipping_cost, total_shipping_cost_per_rental,
             flip_daily, flip_weekend, flip_weekly,
             mini4_daily, mini4_weekend, mini4_weekly,
-            mix_daily, mix_weekend, mix_weekly, processing_fee,
-            legal_cost
+            mix_daily, mix_weekend, mix_weekly, processing_fee
         ],
         'Unit': [
             'units', '£', 'units', '£',
@@ -302,8 +306,7 @@ def create_export_data(results):
             '£', '£', '£', '£',
             '£', '£', '£',
             '£', '£', '£',
-            '%', '%', '%', '%',
-            '£'
+            '%', '%', '%', '%'
         ]
     }
     
@@ -369,18 +372,19 @@ def create_export_data(results):
     # 4. Cost Breakdown
     cost_breakdown_data = {
         'Cost Category': [
-            'DJI Flips', 'DJI Mini 4 Pros', 'SD Cards', 'Accessories (Cases, Batteries, Filters)',
+            'DJI Flips', 'DJI Mini 4 Pros', 'SD Cards', 'Hard Cases', 'Extra Batteries', 'ND Filters',
             'Website & Legal', 'E-commerce Platform', 'Domain & Hosting', 'Insurance & CAA',
             'Marketing', 'Repairs & Maintenance', 'Shipping Supplies'
         ],
         'Amount (£)': [
-            flip_qty * flip_cost, mini4_qty * mini4_cost, (flip_qty + mini4_qty) * 38.99, case_cost + battery_cost + filter_cost,
-            web_cost + legal_cost, platform_cost, domain_cost, insurance_cost + caa_cost,
+            flip_qty * flip_cost, mini4_qty * mini4_cost, (flip_qty + mini4_qty) * 38.99, total_hard_cases_cost,
+            battery_cost, filter_cost, web_cost + legal_cost, platform_cost, domain_cost, insurance_cost + caa_cost,
             marketing_cost, repairs_cost, shipping_cost
         ],
         'Type': [
-            'Capital', 'Capital', 'Capital', 'Capital', 'Capital',
-            'Operational', 'Operational', 'Operational', 'Operational', 'Operational', 'Operational'
+            'Capital', 'Capital', 'Capital', 'Capital', 'Capital', 'Capital',
+            'Capital', 'Operational', 'Operational', 'Operational',
+            'Operational', 'Operational', 'Operational'
         ]
     }
     
@@ -584,7 +588,7 @@ if mix_total == 100.0:
     st.dataframe(styled_df, use_container_width=True)
     
     # Monthly Revenue Projections Section
-    st.subheader("7. Monthly Revenue Projections")
+    st.subheader("7. Monthly Revenue & Rental Projections")
     
     def calculate_monthly_projection(utilisation):
         rental_days = results['total_available_days'] * (utilisation / 100.0)
@@ -600,14 +604,21 @@ if mix_total == 100.0:
         monthly_profit = monthly_revenue - monthly_variable_costs - monthly_operational_costs
         monthly_rental_days = rental_days / 12.0
         
+        # Calculate actual rentals per month (assuming average rental duration)
+        # Based on rental mix: 20% daily, 60% weekend, 20% weekly
+        avg_rental_duration = (0.2 * 1) + (0.6 * 2) + (0.2 * 7)  # weighted average days per rental
+        monthly_rentals = monthly_rental_days / avg_rental_duration if avg_rental_duration > 0 else 0
+        
         return {
             'monthly_revenue': monthly_revenue,
             'monthly_profit': monthly_profit,
             'monthly_rental_days': monthly_rental_days,
+            'monthly_rentals': monthly_rentals,
             'monthly_variable_costs': monthly_variable_costs,
             'monthly_operational_costs': monthly_operational_costs,
             'annual_revenue': total_revenue,
-            'annual_profit': monthly_profit * 12  # Annual profit excluding capex
+            'annual_profit': monthly_profit * 12,  # Annual profit excluding capex
+            'avg_rental_duration': avg_rental_duration
         }
     
     # Calculate projections for specified utilisation rates
@@ -618,9 +629,10 @@ if mix_total == 100.0:
         proj = calculate_monthly_projection(util)
         monthly_projections_data.append({
             'Utilisation Rate': f"{util}%",
+            'Monthly Rentals': f"{proj['monthly_rentals']:.1f}",
+            'Avg Rental Duration': f"{proj['avg_rental_duration']:.1f} days",
             'Monthly Revenue': f"£{proj['monthly_revenue']:,.0f}",
             'Monthly Profit': f"£{proj['monthly_profit']:,.0f}",
-            'Monthly Rental Days': f"{proj['monthly_rental_days']:.1f}",
             'Annual Revenue': f"£{proj['annual_revenue']:,.0f}",
             'Annual Profit': f"£{proj['annual_profit']:,.0f}",
             'Profit_Margin': proj['monthly_profit']
@@ -632,56 +644,47 @@ if mix_total == 100.0:
     styled_monthly_df = df_monthly_projections.style.applymap(color_profit, subset=['Monthly Profit'])
     st.dataframe(styled_monthly_df, use_container_width=True)
     
-    # Detailed Monthly Breakdown
-    st.markdown("**📊 Detailed Monthly Breakdown:**")
+    # Monthly Cost Breakdown
+    st.markdown("**📊 Monthly Cost Breakdown:**")
     
-    breakdown_data = []
+    cost_breakdown_data = []
     for util in target_utilisation_rates:
         proj = calculate_monthly_projection(util)
-        breakdown_data.append({
+        cost_breakdown_data.append({
             'Utilisation Rate': f"{util}%",
+            'Monthly Rentals': f"{proj['monthly_rentals']:.1f}",
             'Monthly Revenue': f"£{proj['monthly_revenue']:,.2f}",
-            'Monthly Variable Costs': f"£{proj['monthly_variable_costs']:,.2f}",
-            'Monthly Operational Costs': f"£{proj['monthly_operational_costs']:,.2f}",
+            'Variable Costs': f"£{proj['monthly_variable_costs']:,.2f}",
+            'Fixed Operational Costs': f"£{proj['monthly_operational_costs']:,.2f}",
+            'Total Monthly Costs': f"£{proj['monthly_variable_costs'] + proj['monthly_operational_costs']:,.2f}",
             'Monthly Profit': f"£{proj['monthly_profit']:,.2f}",
             'Profit Margin %': f"{(proj['monthly_profit'] / proj['monthly_revenue'] * 100):.1f}%" if proj['monthly_revenue'] > 0 else "0.0%"
         })
     
-    df_breakdown = pd.DataFrame(breakdown_data)
-    st.dataframe(df_breakdown, use_container_width=True)
-    
-    # Debug calculation for 15% utilisation
-    st.markdown("**🔍 Debug Calculation (15% Utilisation):**")
-    debug_proj = calculate_monthly_projection(15)
-    st.markdown(f"""
-    - **Monthly Revenue**: £{debug_proj['monthly_revenue']:,.2f}
-    - **Monthly Variable Costs**: £{debug_proj['monthly_variable_costs']:,.2f}
-    - **Monthly Operational Costs**: £{debug_proj['monthly_operational_costs']:,.2f}
-    - **Calculation**: £{debug_proj['monthly_revenue']:,.2f} - £{debug_proj['monthly_variable_costs']:,.2f} - £{debug_proj['monthly_operational_costs']:,.2f} = £{debug_proj['monthly_profit']:,.2f}
-    """)
+    df_cost_breakdown = pd.DataFrame(cost_breakdown_data)
+    st.dataframe(df_cost_breakdown, use_container_width=True)
     
     # Add explanatory text
     st.markdown("""
     <div style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #4f46e5;">
-        <h4>📊 Monthly Revenue Insights:</h4>
+        <h4>📊 Monthly Projections Insights:</h4>
         <ul>
             <li><strong>15% Utilisation:</strong> Conservative estimate for initial market entry</li>
             <li><strong>20% Utilisation:</strong> Realistic target for established operations</li>
             <li><strong>30% Utilisation:</strong> Optimistic scenario with strong market demand</li>
         </ul>
-        <p><strong>Monthly Profit Calculation:</strong></p>
-        <p><strong>Monthly Profit = Monthly Revenue - Monthly Variable Costs - Monthly Operational Costs</strong></p>
+        <p><strong>Key Calculations:</strong></p>
         <ul>
-            <li><strong>Monthly Revenue:</strong> Total rental income for the month</li>
-            <li><strong>Monthly Variable Costs:</strong> Shipping + payment processing fees per rental</li>
-            <li><strong>Monthly Operational Costs:</strong> Platform, insurance, marketing, repairs, etc. (annual ÷ 12)</li>
+            <li><strong>Monthly Rentals:</strong> Actual number of drone rentals per month</li>
+            <li><strong>Avg Rental Duration:</strong> Weighted average based on rental mix (20% daily, 60% weekend, 20% weekly)</li>
+            <li><strong>Monthly Profit:</strong> Monthly Revenue - Variable Costs - Fixed Operational Costs</li>
         </ul>
-        <p><em>Note: Monthly profit excludes the initial capital expenditure (£2,918.81) as this is a one-time startup cost.</em></p>
+        <p><em>Note: Monthly profit excludes the initial capital expenditure as this is a one-time startup cost.</em></p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Cost Breakdown Section
-    st.subheader("8. Cost Breakdown")
+    # Cost Structure Section
+    st.subheader("8. Cost Structure Analysis")
     
     # Calculate costs
     capex = results['capex']
@@ -709,7 +712,7 @@ if mix_total == 100.0:
     with col2:
         st.markdown(f"""
         <div class="metric-card">
-            <h4>Monthly Costs</h4>
+            <h4>Monthly Fixed Costs</h4>
             <h3>£{monthly_costs:,.2f}</h3>
             <p style="font-size: 0.8rem; color: #6b7280;">£{annual_monthly_costs:,.2f} annually</p>
         </div>
@@ -726,31 +729,11 @@ if mix_total == 100.0:
             st.markdown(f"- Additional Costs: £{additional_costs:,.2f}")
     
     with col2:
-        st.markdown("**Monthly Operational Costs (Fixed):**")
+        st.markdown("**Monthly Fixed Operational Costs:**")
         st.markdown(f"- Platform & Hosting: £{(platform_cost + domain_cost) / 12:,.2f}")
         st.markdown(f"- Insurance & CAA: £{(insurance_cost + caa_cost) / 12:,.2f}")
         st.markdown(f"- Marketing: £{marketing_cost / 12:,.2f}")
         st.markdown(f"- Repairs & Maintenance: £{repairs_cost / 12:,.2f}")
-    
-    # Monthly Cost Breakdown
-    st.markdown("---")
-    st.subheader("Monthly Cost Breakdown")
-    
-    # Calculate monthly costs for different utilisation rates
-    cost_breakdown_data = []
-    for util in [15, 20, 30]:
-        proj = calculate_monthly_projection(util)
-        cost_breakdown_data.append({
-            'Utilisation Rate': f"{util}%",
-            'Monthly Revenue': f"£{proj['monthly_revenue']:,.2f}",
-            'Variable Costs': f"£{proj['monthly_variable_costs']:,.2f}",
-            'Fixed Operational Costs': f"£{proj['monthly_operational_costs']:,.2f}",
-            'Total Monthly Costs': f"£{proj['monthly_variable_costs'] + proj['monthly_operational_costs']:,.2f}",
-            'Monthly Profit': f"£{proj['monthly_profit']:,.2f}"
-        })
-    
-    df_cost_breakdown = pd.DataFrame(cost_breakdown_data)
-    st.dataframe(df_cost_breakdown, use_container_width=True)
     
     # Variable vs Fixed Cost Explanation
     st.markdown("""
@@ -820,7 +803,9 @@ if mix_total == 100.0:
         cost_data = {
             'DJI Flips': flip_qty * flip_cost,
             'DJI Mini 4 Pros': mini4_qty * mini4_cost,
-            'Accessories': case_cost + battery_cost + filter_cost,
+            'Hard Cases': total_hard_cases_cost,
+            'SD Cards': (flip_qty + mini4_qty) * 38.99,
+            'Batteries & Filters': battery_cost + filter_cost,
             'Website & Legal': web_cost + legal_cost,
             'Annual Opex': results['opex']
         }
