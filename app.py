@@ -392,45 +392,6 @@ def create_export_data(results):
 if mix_total == 100.0:
     results = calculate_financials()
     
-    with col2:
-        st.subheader("5. Key Metrics")
-        
-        # Key metrics cards
-        st.markdown(f"""
-        <div class="metric-card">
-            <h4>Total First-Year Costs</h4>
-            <h2>£{results['total_first_year_costs']:,.2f}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="metric-card">
-            <h4>Avg. Revenue per Day</h4>
-            <h2>£{results['weighted_avg_revenue']:.2f}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="metric-card">
-            <h4>Contribution Margin</h4>
-            <h2>£{results['contribution_margin']:.2f}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="metric-card break-even-highlight">
-            <h4>Break-Even Days</h4>
-            <h2>{results['break_even_days']:.0f}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="metric-card break-even-highlight">
-            <h4>Break-Even Utilisation</h4>
-            <h2>{results['break_even_utilisation']:.1f}%</h2>
-        </div>
-        """, unsafe_allow_html=True)
-    
     # Download section
     st.markdown("---")
     st.markdown('<div class="download-section">', unsafe_allow_html=True)
@@ -520,6 +481,63 @@ if mix_total == 100.0:
     
     st.markdown('</div>', unsafe_allow_html=True)
     
+    # Key Metrics Section
+    st.subheader("5. Key Metrics")
+    
+    # First row of metrics (3 boxes)
+    metric_col1, metric_col2, metric_col3 = st.columns(3)
+    
+    with metric_col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Total First-Year Costs</h4>
+            <h2>£{results['total_first_year_costs']:,.2f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with metric_col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Avg. Revenue per Day</h4>
+            <h2>£{results['weighted_avg_revenue']:.2f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with metric_col3:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Contribution Margin</h4>
+            <h2>£{results['contribution_margin']:.2f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Second row of metrics (3 boxes)
+    metric_col4, metric_col5, metric_col6 = st.columns(3)
+    
+    with metric_col4:
+        st.markdown(f"""
+        <div class="metric-card break-even-highlight">
+            <h4>Break-Even Days</h4>
+            <h2>{results['break_even_days']:.0f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with metric_col5:
+        st.markdown(f"""
+        <div class="metric-card break-even-highlight">
+            <h4>Break-Even Utilisation</h4>
+            <h2>{results['break_even_utilisation']:.1f}%</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with metric_col6:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>Total Available Days</h4>
+            <h2>{results['total_available_days']:,.0f}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # Projections table
     st.subheader("6. Annual Projections")
     
@@ -563,19 +581,24 @@ if mix_total == 100.0:
         rental_days = results['total_available_days'] * (utilisation / 100.0)
         total_revenue = rental_days * results['weighted_avg_revenue']
         total_variable_costs = rental_days * results['variable_cost_per_rental']
-        profit = total_revenue - results['opex'] - total_variable_costs - results['capex']
         
         # Calculate monthly values
         monthly_revenue = total_revenue / 12.0
-        monthly_profit = profit / 12.0
+        monthly_variable_costs = total_variable_costs / 12.0
+        monthly_operational_costs = results['opex'] / 12.0
+        
+        # Monthly profit EXCLUDES capital expenditure (one-time cost)
+        monthly_profit = monthly_revenue - monthly_variable_costs - monthly_operational_costs
         monthly_rental_days = rental_days / 12.0
         
         return {
             'monthly_revenue': monthly_revenue,
             'monthly_profit': monthly_profit,
             'monthly_rental_days': monthly_rental_days,
+            'monthly_variable_costs': monthly_variable_costs,
+            'monthly_operational_costs': monthly_operational_costs,
             'annual_revenue': total_revenue,
-            'annual_profit': profit
+            'annual_profit': monthly_profit * 12  # Annual profit excluding capex
         }
     
     # Calculate projections for specified utilisation rates
@@ -609,7 +632,9 @@ if mix_total == 100.0:
             <li><strong>20% Utilisation:</strong> Realistic target for established operations</li>
             <li><strong>30% Utilisation:</strong> Optimistic scenario with strong market demand</li>
         </ul>
-        <p><em>Note: Monthly profit excludes initial capital expenditure (one-time cost).</em></p>
+        <p><strong>Monthly Profit Calculation:</strong></p>
+        <p>Monthly Revenue - Monthly Variable Costs - Monthly Operational Costs</p>
+        <p><em>Note: Monthly profit excludes the initial capital expenditure (£2,918.81) as this is a one-time startup cost.</em></p>
     </div>
     """, unsafe_allow_html=True)
     
