@@ -1072,29 +1072,6 @@ if mix_total == 100.0:
     # Create export data
     export_data = create_export_data(results)
     
-    # Generate PDF Report
-    st.markdown("### 📄 Professional Business Plan PDF")
-    st.markdown("Generate a comprehensive business plan PDF for investors and stakeholders")
-    
-    if st.button("🚀 Generate Business Plan PDF", type="primary", help="Create a professional PDF report with all data, charts, and analysis"):
-        with st.spinner("Generating comprehensive business plan PDF..."):
-            try:
-                pdf_data = generate_pdf_report(results, vat_analysis, business_metrics, export_data, selected_preset)
-                
-                st.download_button(
-                    label="📄 Download Business Plan PDF",
-                    data=pdf_data,
-                    file_name=f"aerorent_business_plan_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                    mime="application/pdf",
-                    help="Download the complete business plan as a professional PDF document"
-                )
-                
-                st.success("✅ Business plan PDF generated successfully! Click the download button above to save.")
-                
-            except Exception as e:
-                st.error(f"❌ Error generating PDF: {str(e)}")
-                st.info("Please ensure all calculations are complete and try again.")
-    
     st.markdown("---")
     st.markdown("### 📊 Data Export Options")
     st.markdown("Export specific data sections for further analysis")
@@ -1688,6 +1665,31 @@ if mix_total == 100.0:
         return metrics
     
     business_metrics = calculate_business_metrics(results, utilisation_rates=None)
+    
+    # Generate PDF Report
+    st.markdown("### 📄 Professional Business Plan PDF")
+    st.markdown("Generate a comprehensive business plan PDF for investors and stakeholders")
+    
+    if st.button("🚀 Generate Business Plan PDF", type="primary", help="Create a professional PDF report with all data, charts, and analysis"):
+        with st.spinner("Generating comprehensive business plan PDF..."):
+            try:
+                pdf_data = generate_pdf_report(results, vat_analysis, business_metrics, export_data, selected_preset)
+                
+                st.download_button(
+                    label="📄 Download Business Plan PDF",
+                    data=pdf_data,
+                    file_name=f"aerorent_business_plan_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    mime="application/pdf",
+                    help="Download the complete business plan as a professional PDF document"
+                )
+                
+                st.success("✅ Business plan PDF generated successfully! Click the download button above to save.")
+                
+            except Exception as e:
+                st.error(f"❌ Error generating PDF: {str(e)}")
+                st.info("Please ensure all calculations are complete and try again.")
+    
+    st.markdown("---")
     
     # Display metrics in tabs
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📈 ROI & Payback", "💰 Cash Flow", "🎯 Sensitivity", "⚠️ Risk Assessment", "📊 Summary", "🏛️ VAT Analysis"])
