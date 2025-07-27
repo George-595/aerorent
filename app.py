@@ -1024,6 +1024,11 @@ if mix_total == 100.0:
     
     # Calculate additional financial metrics
     def calculate_business_metrics(results, utilisation_rates=[15, 20, 30]):
+        """
+        Calculate business planning metrics with two different approaches:
+        1. ROI & Payback: Include capex to measure return on total investment
+        2. Cash Flow: Exclude capex to measure ongoing operational cash generation
+        """
         metrics = {}
         
         # ROI and Payback Period calculations
@@ -1036,18 +1041,32 @@ if mix_total == 100.0:
         
         for util in utilisation_rates:
             proj = calculate_projection(util)
-            annual_profit = proj['profit']
+            annual_profit = proj['profit']  # Includes capex for ROI/payback calculations
             
             # ROI = (Annual Profit / Initial Investment) * 100
+            # Note: Annual profit includes capex to measure return on total investment
             roi = (annual_profit / initial_investment * 100) if initial_investment > 0 else 0
             
             # Payback Period = Initial Investment / Annual Profit
+            # Note: Annual profit includes capex to measure time to recover total investment
             payback_years = initial_investment / annual_profit if annual_profit > 0 else float('inf')
             payback_months = payback_years * 12 if payback_years != float('inf') else float('inf')
             
             # Cash Flow Analysis
-            monthly_profit = annual_profit / 12
-            monthly_cash_flow = monthly_profit - (results['opex'] / 12)
+            # Use the same logic as calculate_monthly_projection - exclude capex from monthly calculations
+            # Note: Cash flow excludes capex to measure ongoing operational cash generation
+            rental_days = results['total_available_days'] * (util / 100.0)
+            total_revenue = rental_days * results['weighted_avg_revenue']
+            total_variable_costs = rental_days * results['variable_cost_per_rental']
+            
+            # Calculate monthly values (excluding capex)
+            monthly_revenue = total_revenue / 12.0
+            monthly_variable_costs = total_variable_costs / 12.0
+            monthly_operational_costs = results['opex'] / 12.0
+            monthly_profit = monthly_revenue - monthly_variable_costs - monthly_operational_costs
+            
+            # Monthly cash flow is the same as monthly profit (excluding capex)
+            monthly_cash_flow = monthly_profit
             
             roi_data.append({
                 'Utilisation': f"{util}%",
@@ -1096,7 +1115,8 @@ if mix_total == 100.0:
         for scenario_name, revenue_mult, cost_mult in scenarios:
             if 'Revenue' in scenario_name:  # Revenue scenarios
                 adjusted_revenue = base_proj['revenue'] * revenue_mult
-                adjusted_profit = adjusted_revenue - results['opex'] - (base_proj['revenue'] - base_profit - results['opex'])
+                adjusted_variable_costs = (base_proj['revenue'] - base_profit - results['opex']) * revenue_mult
+                adjusted_profit = adjusted_revenue - results['opex'] - adjusted_variable_costs - results['capex']
             else:  # Cost scenarios
                 adjusted_profit = base_profit - (results['opex'] * (cost_mult - 1))
             
