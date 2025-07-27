@@ -502,6 +502,67 @@ def create_export_data(results):
 if mix_total == 100.0:
     results = calculate_financials()
     
+    # Calculate VAT analysis
+    def calculate_vat_analysis(results):
+        vat_rate = 0.20  # 20% UK VAT rate
+        
+        # VAT on Revenue (assuming all revenue is VATable)
+        total_revenue_vat = results['weighted_avg_revenue'] * vat_rate
+        
+        # VAT-deductible items (business expenses)
+        vat_deductible_items = {
+            'DJI Flips': flip_qty * flip_cost * vat_rate,
+            'DJI Mini 4 Pros': mini4_qty * mini4_cost * vat_rate,
+            'Hard Cases': total_hard_cases_cost * vat_rate,
+            'SD Cards': (flip_qty + mini4_qty) * 38.99 * vat_rate,
+            'Extra Batteries': battery_cost * vat_rate,
+            'ND Filters': filter_cost * vat_rate,
+            'Website Setup': web_cost * vat_rate,
+            'Legal Fees': legal_cost * vat_rate,
+            'E-commerce Platform': platform_cost * vat_rate,
+            'Domain & Hosting': domain_cost * vat_rate,
+            'Corporate Insurance': insurance_cost * vat_rate,
+            'CAA Renewal': caa_cost * vat_rate,
+            'Digital Marketing': marketing_cost * vat_rate,
+            'Repairs & Maintenance': repairs_cost * vat_rate,
+            'Shipping Supplies': shipping_cost * vat_rate,
+            'Cardboard Boxes': box_cost * vat_rate,
+            'Accountant Costs': accountant_cost * 12 * vat_rate  # Annual accountant costs
+        }
+        
+        # Additional costs VAT
+        additional_costs_vat = sum(cost["amount"] * vat_rate for cost in st.session_state.get('additional_costs', []))
+        
+        total_vat_deductible = sum(vat_deductible_items.values()) + additional_costs_vat
+        
+        # Net VAT payable (VAT on revenue - VAT deductible)
+        net_vat_payable = total_revenue_vat - total_vat_deductible
+        
+        # Profit after VAT
+        profit_before_vat = results['contribution_margin']
+        profit_after_vat = profit_before_vat - net_vat_payable
+        
+        # VAT registration threshold analysis
+        vat_threshold = 85000  # UK VAT registration threshold
+        annual_revenue = results['weighted_avg_revenue'] * results['total_available_days']
+        months_to_threshold = (vat_threshold / annual_revenue * 12) if annual_revenue > 0 else float('inf')
+        
+        return {
+            'vat_rate': vat_rate,
+            'total_revenue_vat': total_revenue_vat,
+            'vat_deductible_items': vat_deductible_items,
+            'total_vat_deductible': total_vat_deductible,
+            'net_vat_payable': net_vat_payable,
+            'profit_before_vat': profit_before_vat,
+            'profit_after_vat': profit_after_vat,
+            'vat_threshold': vat_threshold,
+            'annual_revenue': annual_revenue,
+            'months_to_threshold': months_to_threshold,
+            'additional_costs_vat': additional_costs_vat
+        }
+    
+    vat_analysis = calculate_vat_analysis(results)
+    
     # Download section
     st.markdown("---")
     st.markdown('<div class="download-section">', unsafe_allow_html=True)
@@ -1069,67 +1130,6 @@ if mix_total == 100.0:
         return metrics
     
     business_metrics = calculate_business_metrics(results)
-    
-    # Calculate VAT analysis
-    def calculate_vat_analysis(results):
-        vat_rate = 0.20  # 20% UK VAT rate
-        
-        # VAT on Revenue (assuming all revenue is VATable)
-        total_revenue_vat = results['weighted_avg_revenue'] * vat_rate
-        
-        # VAT-deductible items (business expenses)
-        vat_deductible_items = {
-            'DJI Flips': flip_qty * flip_cost * vat_rate,
-            'DJI Mini 4 Pros': mini4_qty * mini4_cost * vat_rate,
-            'Hard Cases': total_hard_cases_cost * vat_rate,
-            'SD Cards': (flip_qty + mini4_qty) * 38.99 * vat_rate,
-            'Extra Batteries': battery_cost * vat_rate,
-            'ND Filters': filter_cost * vat_rate,
-            'Website Setup': web_cost * vat_rate,
-            'Legal Fees': legal_cost * vat_rate,
-            'E-commerce Platform': platform_cost * vat_rate,
-            'Domain & Hosting': domain_cost * vat_rate,
-            'Corporate Insurance': insurance_cost * vat_rate,
-            'CAA Renewal': caa_cost * vat_rate,
-            'Digital Marketing': marketing_cost * vat_rate,
-            'Repairs & Maintenance': repairs_cost * vat_rate,
-            'Shipping Supplies': shipping_cost * vat_rate,
-            'Cardboard Boxes': box_cost * vat_rate,
-            'Accountant Costs': accountant_cost * 12 * vat_rate  # Annual accountant costs
-        }
-        
-        # Additional costs VAT
-        additional_costs_vat = sum(cost["amount"] * vat_rate for cost in st.session_state.get('additional_costs', []))
-        
-        total_vat_deductible = sum(vat_deductible_items.values()) + additional_costs_vat
-        
-        # Net VAT payable (VAT on revenue - VAT deductible)
-        net_vat_payable = total_revenue_vat - total_vat_deductible
-        
-        # Profit after VAT
-        profit_before_vat = results['contribution_margin']
-        profit_after_vat = profit_before_vat - net_vat_payable
-        
-        # VAT registration threshold analysis
-        vat_threshold = 85000  # UK VAT registration threshold
-        annual_revenue = results['weighted_avg_revenue'] * results['total_available_days']
-        months_to_threshold = (vat_threshold / annual_revenue * 12) if annual_revenue > 0 else float('inf')
-        
-        return {
-            'vat_rate': vat_rate,
-            'total_revenue_vat': total_revenue_vat,
-            'vat_deductible_items': vat_deductible_items,
-            'total_vat_deductible': total_vat_deductible,
-            'net_vat_payable': net_vat_payable,
-            'profit_before_vat': profit_before_vat,
-            'profit_after_vat': profit_after_vat,
-            'vat_threshold': vat_threshold,
-            'annual_revenue': annual_revenue,
-            'months_to_threshold': months_to_threshold,
-            'additional_costs_vat': additional_costs_vat
-        }
-    
-    vat_analysis = calculate_vat_analysis(results)
     
     # Display metrics in tabs
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📈 ROI & Payback", "💰 Cash Flow", "🎯 Sensitivity", "⚠️ Risk Assessment", "📊 Summary", "🏛️ VAT Analysis"])
