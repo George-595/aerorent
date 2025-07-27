@@ -809,12 +809,13 @@ def generate_pdf_report(results, vat_analysis, business_metrics, export_data, pr
     story.append(Paragraph("📈 Return on Investment (ROI) Analysis", subheading_style))
     
     roi_data = []
-    for data in business_metrics['roi_data']:
+    for i, roi_data_item in enumerate(business_metrics['roi_data']):
+        payback_data_item = business_metrics['payback_data'][i]  # Get corresponding payback data
         roi_data.append([
-            data['Utilisation'],
-            f"{data['ROI']:.1f}%",
-            f"£{data['Annual Profit']:,.0f}",
-            f"{data['Payback Years']:.1f} years" if data['Payback Years'] != float('inf') else "∞"
+            roi_data_item['Utilisation'],
+            f"{roi_data_item['ROI']:.1f}%",
+            f"£{roi_data_item['Annual Profit']:,.0f}",
+            f"{payback_data_item['Payback Years']:.1f} years" if payback_data_item['Payback Years'] != float('inf') else "∞"
         ])
     
     roi_table_data = [['Utilisation', 'ROI', 'Annual Profit', 'Payback Period']] + roi_data
@@ -1528,8 +1529,10 @@ if mix_total == 100.0:
             base_rates = [15, 20, 30]
             
             # Add break-even utilisation if it's not already in the base rates
-            if break_even_util not in base_rates and 10 <= break_even_util <= 50:
-                utilisation_rates = sorted(base_rates + [break_even_util])
+            # Round to nearest 5% for cleaner display
+            rounded_break_even = round(break_even_util / 5) * 5
+            if rounded_break_even not in base_rates and 10 <= rounded_break_even <= 50:
+                utilisation_rates = sorted(base_rates + [rounded_break_even])
             else:
                 utilisation_rates = base_rates
         """
@@ -1666,6 +1669,9 @@ if mix_total == 100.0:
     
     business_metrics = calculate_business_metrics(results, utilisation_rates=None)
     
+    # Debug: Show what utilisation rates are being used
+    st.write("Debug - Utilisation rates in analysis:", [data['Utilisation'] for data in business_metrics['roi_data']])
+    
     # Generate PDF Report
     st.markdown("### 📄 Professional Business Plan PDF")
     st.markdown("Generate a comprehensive business plan PDF for investors and stakeholders")
@@ -1710,8 +1716,8 @@ if mix_total == 100.0:
         with col2:
             st.markdown("**Payback Period Analysis**")
             payback_df = pd.DataFrame(business_metrics['payback_data'])
-            payback_df['Payback Years'] = payback_df['Payback Years'].apply(lambda x: f"{x:.1f}" if x != float('inf') else "∞")
-            payback_df['Payback Months'] = payback_df['Payback Months'].apply(lambda x: f"{x:.0f}" if x != float('inf') else "∞")
+            payback_df['Payback Years'] = payback_df['Payback Years'].apply(lambda x: f"{x:.1f}" if x != float('inf') and x < 1000 else "∞")
+            payback_df['Payback Months'] = payback_df['Payback Months'].apply(lambda x: f"{x:.0f}" if x != float('inf') and x < 12000 else "∞")
             payback_df['Annual Profit'] = payback_df['Annual Profit'].apply(lambda x: f"£{x:,.0f}")
             st.dataframe(payback_df, use_container_width=True)
         
@@ -1732,7 +1738,12 @@ if mix_total == 100.0:
             title='Return on Investment by Utilisation Rate',
             xaxis_title='Utilisation Rate',
             yaxis_title='ROI (%)',
-            height=400
+            height=400,
+            xaxis=dict(
+                type='category',
+                categoryorder='array',
+                categoryarray=utilisation_labels
+            )
         )
         
         st.plotly_chart(fig_roi, use_container_width=True)
