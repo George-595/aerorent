@@ -7,7 +7,7 @@ import io
 
 # Define presets
 PRESETS = {
-    "Preset 1 (Current)": {
+    "Proposal 1": {
         # Capital Expenditure
         "flip_qty": 3.0,
         "flip_cost": 587.95,
@@ -41,7 +41,7 @@ PRESETS = {
         "mix_weekend": 60.0,
         "mix_weekly": 20.0
     },
-    "Preset 2 (New)": {
+    "Proposal 2": {
         # Capital Expenditure
         "flip_qty": 3.0,
         "flip_cost": 587.95,
