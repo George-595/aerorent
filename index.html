@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroRent UK - Drone Hire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .hero-bg {
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://placehold.co/1600x900/1a202c/ffffff?text=AeroRent+UK');
+            background-size: cover;
+            background-position: center;
+        }
+        .modal {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .nav-link.active {
+            color: #2563eb; /* blue-600 */
+            border-bottom: 2px solid #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" onclick="showPage(event, 'home')" class="text-2xl font-bold text-blue-600">
+                <i class="fas fa-paper-plane mr-2"></i>AeroRent UK
+            </a>
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="#" onclick="showPage(event, 'home')" class="nav-link text-gray-600 hover:text-blue-600 pb-1 active">Home</a>
+                <a href="#" onclick="showPage(event, 'fleet')" class="nav-link text-gray-600 hover:text-blue-600 pb-1">Our Fleet</a>
+                <a href="#" onclick="showPage(event, 'how-it-works')" class="nav-link text-gray-600 hover:text-blue-600 pb-1">How It Works</a>
+                <a href="#" onclick="showPage(event, 'fleet')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Rent Now</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" type="button" class="text-gray-600 focus:outline-none">
+                    <i class="fas fa-bars fa-lg"></i>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 border-t">
+            <a href="#" onclick="showPage(event, 'home'); mobileMenu.classList.add('hidden');" class="block py-2 text-gray-600 hover:text-blue-600">Home</a>
+            <a href="#" onclick="showPage(event, 'fleet'); mobileMenu.classList.add('hidden');" class="block py-2 text-gray-600 hover:text-blue-600">Our Fleet</a>
+            <a href="#" onclick="showPage(event, 'how-it-works'); mobileMenu.classList.add('hidden');" class="block py-2 text-gray-600 hover:text-blue-600">How It Works</a>
+            <a href="#" onclick="showPage(event, 'fleet'); mobileMenu.classList.add('hidden');" class="block mt-2 bg-blue-600 text-white text-center px-4 py-2 rounded-lg hover:bg-blue-700 transition">Rent Now</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Home Page Content -->
+        <div id="home-page" class="page-content">
+            <section class="hero-bg text-white py-20 md:py-32">
+                <div class="container mx-auto px-6 text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4">High-Quality Drone Rentals, Simplified.</h1>
+                    <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto">Accessible, safe, and legally compliant sub-250g drone hire for creators, hobbyists, and tourists across the UK.</p>
+                    <a href="#" onclick="showPage(event, 'fleet')" class="bg-white text-blue-600 font-bold py-3 px-8 rounded-full hover:bg-gray-200 transition text-lg">Explore Our Fleet</a>
+                </div>
+            </section>
+        </div>
+
+        <!-- Our Fleet Page Content -->
+        <div id="fleet-page" class="page-content hidden">
+            <section id="fleet" class="py-20">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-3xl md:text-4xl font-bold text-center mb-2">Our Drone Fleet</h2>
+                    <p class="text-center text-gray-600 mb-12">All prices include tracked next-day delivery and pre-paid returns.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                        
+                        <!-- DJI Flip Card -->
+                        <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+                            <img src="https://placehold.co/600x400/e2e8f0/333?text=DJI+Flip" alt="DJI Flip Drone" class="w-full h-64 object-cover">
+                            <div class="p-6 flex-grow flex flex-col">
+                                <h3 class="text-2xl font-bold mb-2">DJI Flip</h3>
+                                <p class="text-gray-600 mb-4 flex-grow">The perfect entry-point. User-friendly with integrated prop guards for maximum safety. Ideal for first-time flyers and casual use.</p>
+                                <div class="mb-6">
+                                    <h4 class="font-semibold mb-2">Key Features:</h4>
+                                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                        <li>Sub-250g Lightweight Design</li>
+                                        <li>4K/60fps HDR Video</li>
+                                        <li>Enclosed Propeller Guards</li>
+                                        <li>Beginner Friendly Flight Modes</li>
+                                    </ul>
+                                </div>
+                                <div class="grid grid-cols-3 text-center mb-6 border-t border-b py-4">
+                                    <div>
+                                        <p class="text-sm text-gray-500">Daily</p>
+                                        <p class="font-bold text-lg">£35.00</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Weekend</p>
+                                        <p class="font-bold text-lg">£60.00</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Weekly</p>
+                                        <p class="font-bold text-lg">£145.00</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="openModal('DJI Flip', {daily: 35, weekend: 60, weekly: 145})" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition mt-auto">Rent Now</button>
+                            </div>
+                        </div>
+
+                        <!-- DJI Mini 4 Pro Card -->
+                        <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+                            <img src="https://placehold.co/600x400/e2e8f0/333?text=DJI+Mini+4+Pro" alt="DJI Mini 4 Pro Drone" class="w-full h-64 object-cover">
+                            <div class="p-6 flex-grow flex flex-col">
+                                <h3 class="text-2xl font-bold mb-2">DJI Mini 4 Pro</h3>
+                                <p class="text-gray-600 mb-4 flex-grow">The premium choice for prosumers. Superior performance with advanced features for professional-level content.</p>
+                                <div class="mb-6">
+                                    <h4 class="font-semibold mb-2">Key Features:</h4>
+                                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                        <li>Sub-250g Lightweight Design</li>
+                                        <li>4K/100fps Video & D-Log M</li>
+                                        <li>Omnidirectional Obstacle Sensing</li>
+                                        <li>Advanced Subject Tracking</li>
+                                    </ul>
+                                </div>
+                                <div class="grid grid-cols-3 text-center mb-6 border-t border-b py-4">
+                                    <div>
+                                        <p class="text-sm text-gray-500">Daily</p>
+                                        <p class="font-bold text-lg">£45.00</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Weekend</p>
+                                        <p class="font-bold text-lg">£79.99</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Weekly</p>
+                                        <p class="font-bold text-lg">£189.99</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="openModal('DJI Mini 4 Pro', {daily: 45, weekend: 79.99, weekly: 189.99})" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition mt-auto">Rent Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- How It Works Page Content -->
+        <div id="how-it-works-page" class="page-content hidden">
+            <section id="how-it-works" class="bg-white py-20">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">Simple, Compliant Rentals</h2>
+                    <div class="max-w-4xl mx-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center mb-16">
+                            <div class="flex flex-col items-center">
+                                <div class="bg-blue-100 text-blue-600 rounded-full h-20 w-20 flex items-center justify-center mb-4">
+                                    <i class="fas fa-hand-pointer fa-2x"></i>
+                                </div>
+                                <h3 class="text-xl font-bold mb-2">1. Choose Your Drone</h3>
+                                <p class="text-gray-600">Select the drone and rental period that best suits your project or adventure from our Fleet page.</p>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="bg-blue-100 text-blue-600 rounded-full h-20 w-20 flex items-center justify-center mb-4">
+                                    <i class="fas fa-check-double fa-2x"></i>
+                                </div>
+                                <h3 class="text-xl font-bold mb-2">2. Verify & Comply</h3>
+                                <p class="text-gray-600">Upload your CAA Flyer ID and proof of insurance during checkout for a quick and secure verification.</p>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="bg-blue-100 text-blue-600 rounded-full h-20 w-20 flex items-center justify-center mb-4">
+                                    <i class="fas fa-rocket fa-2x"></i>
+                                </div>
+                                <h3 class="text-xl font-bold mb-2">3. Fly & Create</h3>
+                                <p class="text-gray-600">Receive your drone via next-day delivery. A pre-paid return label is included for easy returns.</p>
+                            </div>
+                        </div>
+
+                        <div id="policy-section" class="bg-gray-50 p-8 rounded-lg">
+                             <h3 class="text-2xl font-bold text-center mb-6">Our Fair-Use Policies</h3>
+                             <div class="bg-white p-6 rounded-lg shadow">
+                                 <h4 class="text-xl font-semibold mb-2 flex items-center"><i class="fas fa-cloud-sun-rain mr-3 text-blue-500"></i>Bad Weather Policy</h4>
+                                 <p class="text-gray-600">We understand that the British weather can be unpredictable. If you are unable to fly due to adverse weather conditions (e.g., high winds or heavy rain), you can cancel your rental for a refund. We will refund the full rental cost, minus a fee to cover two-way postage (£8.99 each way, for a total of £17.98). To be eligible, you must notify us before 10 AM on the first day of your rental period.</p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-gray-800 text-white pt-16 pb-8">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">AeroRent UK</h3>
+                    <p class="text-gray-400">Democratising access to premium aerial imaging technology across the United Kingdom.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul>
+                        <li class="mb-2"><a href="#" onclick="showPage(event, 'home')" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li class="mb-2"><a href="#" onclick="showPage(event, 'fleet')" class="text-gray-400 hover:text-white">Our Fleet</a></li>
+                        <li class="mb-2"><a href="#" onclick="showPage(event, 'how-it-works')" class="text-gray-400 hover:text-white">How It Works & Policies</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Follow Us</h3>
+                    <div class="flex space-x-4 justify-center md:justify-start">
+                        <a href="#" class="text-gray-400 hover:text-white" aria-label="Instagram"><i class="fab fa-instagram fa-2x" aria-hidden="true"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white" aria-label="YouTube"><i class="fab fa-youtube fa-2x" aria-hidden="true"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white" aria-label="Facebook"><i class="fab fa-facebook fa-2x" aria-hidden="true"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-12 pt-6 text-center text-gray-500 text-sm">
+                <p>&copy; 2025 AeroRent UK. All Rights Reserved. | This is a mock-up website.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 invisible opacity-0">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-md transform transition-transform duration-300 scale-95">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="modal-title" class="text-2xl font-bold">Rent Drone</h3>
+                <button type="button" onclick="closeModal()" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6">
+                <form id="booking-form">
+                    <div class="mb-4">
+                        <label for="rental-period" class="block text-sm font-medium text-gray-700 mb-1">Rental Period</label>
+                        <select id="rental-period" name="rental-period" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option value="daily">Daily</option>
+                            <option value="weekend">Weekend</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-gray-600">Total Price: <span id="modal-price" class="font-bold text-xl text-blue-600"></span></p>
+                         <p class="text-xs text-gray-500">Includes tracked delivery & returns. <a href="#" onclick="showPageAndScroll(event, 'how-it-works')" class="text-blue-600 underline">See our weather policy.</a></p>
+                    </div>
+                    <div class="mb-4">
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="name" name="name" required class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="email" name="email" required class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="mb-6">
+                        <label for="document-upload" class="block text-sm font-medium text-gray-700 mb-1">Upload CAA Flyer ID & Insurance</label>
+                        <input type="file" id="document-upload" name="document-upload" required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        <p class="text-xs text-gray-500 mt-1">Please upload a single PDF containing both documents.</p>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">Confirm Booking</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Message Box -->
+            <div id="confirmation-box" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 invisible opacity-0">
+         <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm text-center p-8">
+            <div class="text-green-500 mb-4">
+                <i class="fas fa-check-circle fa-4x" aria-hidden="true"></i>
+            </div>
+            <h3 class="text-2xl font-bold mb-2">Booking Confirmed!</h3>
+            <p class="text-gray-600 mb-6">Thank you! You will receive an email shortly with your rental details.</p>
+            <button type="button" onclick="closeConfirmation()" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition">Close</button>
+        </div>
+    </div>
+
+
+    <script>
+        // --- Page Navigation ---
+        const pages = document.querySelectorAll('.page-content');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        function showPage(event, pageId) {
+            if (event) {
+                event.preventDefault();
+            }
+            // Hide all pages
+            pages.forEach(page => {
+                page.classList.add('hidden');
+            });
+            // Show the selected page
+            const activePage = document.getElementById(pageId + '-page');
+            if (activePage) {
+                activePage.classList.remove('hidden');
+            }
+            // Update active nav link
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('onclick').includes(`'${pageId}'`)) {
+                    link.classList.add('active');
+                }
+            });
+            window.scrollTo(0, 0); // Scroll to top on page change
+        }
+        
+        function showPageAndScroll(event, pageId) {
+            showPage(event, pageId);
+            closeModal();
+            setTimeout(() => {
+                const policySection = document.getElementById('policy-section');
+                if(policySection) {
+                    policySection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 100);
+        }
+
+
+        // --- Mobile Menu ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- Modal Logic ---
+        const modal = document.getElementById('booking-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalPrice = document.getElementById('modal-price');
+        const rentalPeriodSelect = document.getElementById('rental-period');
+        const bookingForm = document.getElementById('booking-form');
+        const confirmationBox = document.getElementById('confirmation-box');
+
+        let currentDronePrices = {};
+
+        function updatePrice() {
+            const selectedPeriod = rentalPeriodSelect.value;
+            const price = currentDronePrices[selectedPeriod];
+            modalPrice.textContent = `£${price.toFixed(2)}`;
+        }
+
+        function openModal(droneName, prices) {
+            modalTitle.textContent = `Rent ${droneName}`;
+            currentDronePrices = prices;
+            updatePrice();
+            modal.classList.remove('invisible', 'opacity-0');
+            modal.querySelector('div').classList.remove('scale-95');
+        }
+
+        function closeModal() {
+            modal.querySelector('div').classList.add('scale-95');
+            modal.classList.add('invisible', 'opacity-0');
+        }
+
+        function closeConfirmation() {
+            confirmationBox.classList.add('invisible', 'opacity-0');
+            confirmationBox.querySelector('div').classList.add('scale-95');
+        }
+
+        rentalPeriodSelect.addEventListener('change', updatePrice);
+
+        bookingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            closeModal();
+            confirmationBox.classList.remove('invisible', 'opacity-0');
+            confirmationBox.querySelector('div').classList.remove('scale-95');
+            setTimeout(() => {
+                bookingForm.reset();
+            }, 500);
+        });
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        confirmationBox.addEventListener('click', function(e) {
+            if (e.target === confirmationBox) {
+                closeConfirmation();
+            }
+        });
+
+        // Initialize with home page
+        showPage(null, 'home');
+    </script>
+</body>
+</html>
