@@ -420,7 +420,11 @@
             confirmationBox.querySelector('div').classList.add('scale-95');
         }
 
-        rentalPeriodSelect.addEventListener('change', updatePrice);
+        rentalPeriodSelect.addEventListener('change', function() {
+            selectedDates = []; // Clear selected dates when period changes
+            renderCalendar();
+            updatePrice();
+        });
 
         bookingForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -466,6 +470,7 @@
 
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
+            const selectedPeriod = rentalPeriodSelect.value;
             
             calendarMonth.textContent = new Date(year, month).toLocaleDateString('en-US', { 
                 month: 'long', 
@@ -488,6 +493,7 @@
                 const isSelected = selectedDates.some(d => d.toDateString() === date.toDateString());
                 const isUnavailable = unavailableDates.some(d => d.toDateString() === date.toDateString());
                 const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+                const isSelectable = isDateSelectable(date, selectedPeriod);
 
                 let classes = 'calendar-day text-center py-2 text-sm rounded';
                 
@@ -501,6 +507,8 @@
                     classes += ' selected';
                 } else if (isToday) {
                     classes += ' bg-blue-100 text-blue-600 font-semibold';
+                } else if (!isSelectable) {
+                    classes += ' disabled';
                 } else {
                     classes += ' hover:bg-blue-50';
                 }
@@ -514,9 +522,15 @@
         function selectDate(dateString) {
             const date = new Date(dateString);
             const today = new Date(new Date().setHours(0, 0, 0, 0));
+            const selectedPeriod = rentalPeriodSelect.value;
             
             // Don't allow selection of past dates or unavailable dates
             if (date < today || unavailableDates.some(d => d.toDateString() === date.toDateString())) {
+                return;
+            }
+
+            // Check if date is selectable based on rental period
+            if (!isDateSelectable(date, selectedPeriod)) {
                 return;
             }
 
@@ -525,11 +539,58 @@
             if (dateIndex > -1) {
                 selectedDates.splice(dateIndex, 1);
             } else {
-                selectedDates.push(date);
+                // For weekend and weekly rentals, auto-select consecutive dates
+                if (selectedPeriod === 'weekend' || selectedPeriod === 'weekly') {
+                    selectedDates = getConsecutiveDates(date, selectedPeriod);
+                } else {
+                    selectedDates = [date];
+                }
             }
             
             renderCalendar();
             updatePrice();
+        }
+
+        function isDateSelectable(date, period) {
+            const today = new Date(new Date().setHours(0, 0, 0, 0));
+            
+            if (period === 'daily') {
+                return true; // All future dates are selectable for daily rentals
+            } else if (period === 'weekend') {
+                // Only allow selection of Fridays and Saturdays for weekend rentals
+                const dayOfWeek = date.getDay();
+                return dayOfWeek === 5 || dayOfWeek === 6; // Friday = 5, Saturday = 6
+            } else if (period === 'weekly') {
+                // Only allow selection of Mondays for weekly rentals
+                const dayOfWeek = date.getDay();
+                return dayOfWeek === 1; // Monday = 1
+            }
+            return true;
+        }
+
+        function getConsecutiveDates(startDate, period) {
+            const dates = [];
+            const start = new Date(startDate);
+            
+            if (period === 'weekend') {
+                // For weekend, select Friday and Saturday
+                if (start.getDay() === 5) { // Friday
+                    dates.push(new Date(start));
+                    dates.push(new Date(start.getTime() + 24 * 60 * 60 * 1000)); // Saturday
+                } else if (start.getDay() === 6) { // Saturday
+                    dates.push(new Date(start.getTime() - 24 * 60 * 60 * 1000)); // Friday
+                    dates.push(new Date(start));
+                }
+            } else if (period === 'weekly') {
+                // For weekly, select 7 consecutive days starting from Monday
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(start);
+                    date.setDate(start.getDate() + i);
+                    dates.push(date);
+                }
+            }
+            
+            return dates;
         }
 
         function previousMonth() {
