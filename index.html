@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroRent UK - Drone Hire</title>
+    <title>AERO RENT UK - Drone Hire</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,6 +26,24 @@
             color: #2563eb; /* blue-600 */
             border-bottom: 2px solid #2563eb;
         }
+        .calendar-day {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .calendar-day:hover {
+            background-color: #dbeafe;
+        }
+        .calendar-day.selected {
+            background-color: #2563eb;
+            color: white;
+        }
+        .calendar-day.disabled {
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .calendar-day.disabled:hover {
+            background-color: transparent;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -33,8 +51,17 @@
     <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#" onclick="showPage(event, 'home')" class="text-2xl font-bold text-blue-600">
-                <i class="fas fa-paper-plane mr-2"></i>AeroRent UK
+            <a href="#" onclick="showPage(event, 'home')" class="flex items-center text-2xl font-bold text-blue-600">
+                <div class="mr-3">
+                    <!-- AERO RENT UK Logo -->
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Aircraft graphic -->
+                        <path d="M8 20 L12 18 L16 20 L20 18 L24 20 L28 18 L32 20" stroke="#1e40af" stroke-width="2" fill="none"/>
+                        <!-- A letter integrated with aircraft -->
+                        <path d="M10 25 L20 15 L30 25 L25 25 L20 20 L15 25 Z" fill="#1e40af"/>
+                    </svg>
+                </div>
+                <span class="text-blue-800">AERO RENT UK</span>
             </a>
             <div class="hidden md:flex space-x-8 items-center">
                 <a href="#" onclick="showPage(event, 'home')" class="nav-link text-gray-600 hover:text-blue-600 pb-1 active">Home</a>
@@ -156,21 +183,21 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center mb-16">
                             <div class="flex flex-col items-center">
                                 <div class="bg-blue-100 text-blue-600 rounded-full h-20 w-20 flex items-center justify-center mb-4">
-                                    <i class="fas fa-hand-pointer fa-2x"></i>
+                                    <i class="fas fa-hand-pointer fa-2x" aria-hidden="true"></i>
                                 </div>
                                 <h3 class="text-xl font-bold mb-2">1. Choose Your Drone</h3>
                                 <p class="text-gray-600">Select the drone and rental period that best suits your project or adventure from our Fleet page.</p>
                             </div>
                             <div class="flex flex-col items-center">
                                 <div class="bg-blue-100 text-blue-600 rounded-full h-20 w-20 flex items-center justify-center mb-4">
-                                    <i class="fas fa-check-double fa-2x"></i>
+                                    <i class="fas fa-check-double fa-2x" aria-hidden="true"></i>
                                 </div>
                                 <h3 class="text-xl font-bold mb-2">2. Verify & Comply</h3>
                                 <p class="text-gray-600">Upload your CAA Flyer ID and proof of insurance during checkout for a quick and secure verification.</p>
                             </div>
                             <div class="flex flex-col items-center">
                                 <div class="bg-blue-100 text-blue-600 rounded-full h-20 w-20 flex items-center justify-center mb-4">
-                                    <i class="fas fa-rocket fa-2x"></i>
+                                    <i class="fas fa-rocket fa-2x" aria-hidden="true"></i>
                                 </div>
                                 <h3 class="text-xl font-bold mb-2">3. Fly & Create</h3>
                                 <p class="text-gray-600">Receive your drone via next-day delivery. A pre-paid return label is included for easy returns.</p>
@@ -180,7 +207,7 @@
                         <div id="policy-section" class="bg-gray-50 p-8 rounded-lg">
                              <h3 class="text-2xl font-bold text-center mb-6">Our Fair-Use Policies</h3>
                              <div class="bg-white p-6 rounded-lg shadow">
-                                 <h4 class="text-xl font-semibold mb-2 flex items-center"><i class="fas fa-cloud-sun-rain mr-3 text-blue-500"></i>Bad Weather Policy</h4>
+                                 <h4 class="text-xl font-semibold mb-2 flex items-center"><i class="fas fa-cloud-sun-rain mr-3 text-blue-500" aria-hidden="true"></i>Bad Weather Policy</h4>
                                  <p class="text-gray-600">We understand that the British weather can be unpredictable. If you are unable to fly due to adverse weather conditions (e.g., high winds or heavy rain), you can cancel your rental for a refund. We will refund the full rental cost, minus a fee to cover two-way postage (£8.99 each way, for a total of £17.98). To be eligible, you must notify us before 10 AM on the first day of your rental period.</p>
                              </div>
                         </div>
@@ -223,13 +250,47 @@
 
     <!-- Booking Modal -->
     <div id="booking-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 invisible opacity-0">
-        <div class="bg-white rounded-lg shadow-2xl w-full max-w-md transform transition-transform duration-300 scale-95">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95">
             <div class="flex justify-between items-center p-4 border-b">
                 <h3 id="modal-title" class="text-2xl font-bold">Rent Drone</h3>
                 <button type="button" onclick="closeModal()" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6">
                 <form id="booking-form">
+                    <!-- Calendar Section -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Select Rental Dates</label>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex justify-between items-center mb-4">
+                                <button type="button" onclick="previousMonth()" class="text-gray-600 hover:text-blue-600">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <h4 id="calendar-month" class="text-lg font-semibold">January 2025</h4>
+                                <button type="button" onclick="nextMonth()" class="text-gray-600 hover:text-blue-600">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 mb-2">
+                                <div class="text-center text-sm font-medium text-gray-500 py-2">Sun</div>
+                                <div class="text-center text-sm font-medium text-gray-500 py-2">Mon</div>
+                                <div class="text-center text-sm font-medium text-gray-500 py-2">Tue</div>
+                                <div class="text-center text-sm font-medium text-gray-500 py-2">Wed</div>
+                                <div class="text-center text-sm font-medium text-gray-500 py-2">Thu</div>
+                                <div class="text-center text-sm font-medium text-gray-500 py-2">Fri</div>
+                                <div class="text-center text-sm font-medium text-gray-500 py-2">Sat</div>
+                            </div>
+                            <div id="calendar-days" class="grid grid-cols-7 gap-1">
+                                <!-- Calendar days will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        <div class="mt-3 text-sm text-gray-600">
+                            <p><span class="inline-block w-3 h-3 bg-blue-600 mr-2"></span>Selected dates</p>
+                            <p><span class="inline-block w-3 h-3 bg-gray-300 mr-2"></span>Available dates</p>
+                            <p><span class="inline-block w-3 h-3 bg-red-200 mr-2"></span>Unavailable dates</p>
+                        </div>
+                    </div>
+
+                    <!-- Rental Period Selection -->
                     <div class="mb-4">
                         <label for="rental-period" class="block text-sm font-medium text-gray-700 mb-1">Rental Period</label>
                         <select id="rental-period" name="rental-period" class="w-full p-2 border border-gray-300 rounded-md">
@@ -238,10 +299,12 @@
                             <option value="weekly">Weekly</option>
                         </select>
                     </div>
+                    
                     <div class="mb-4">
                         <p class="text-gray-600">Total Price: <span id="modal-price" class="font-bold text-xl text-blue-600"></span></p>
-                         <p class="text-xs text-gray-500">Includes tracked delivery & returns. <a href="#" onclick="showPageAndScroll(event, 'how-it-works')" class="text-blue-600 underline">See our weather policy.</a></p>
+                        <p class="text-xs text-gray-500">Includes tracked delivery & returns. <a href="#" onclick="showPageAndScroll(event, 'how-it-works')" class="text-blue-600 underline">See our weather policy.</a></p>
                     </div>
+                    
                     <div class="mb-4">
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                         <input type="text" id="name" name="name" required class="w-full p-2 border border-gray-300 rounded-md">
@@ -340,6 +403,8 @@
         function openModal(droneName, prices) {
             modalTitle.textContent = `Rent ${droneName}`;
             currentDronePrices = prices;
+            selectedDates = []; // Reset selected dates
+            renderCalendar();
             updatePrice();
             modal.classList.remove('invisible', 'opacity-0');
             modal.querySelector('div').classList.remove('scale-95');
@@ -378,6 +443,128 @@
                 closeConfirmation();
             }
         });
+
+        // --- Calendar Logic ---
+        let currentDate = new Date();
+        let selectedDates = [];
+        let unavailableDates = [
+            new Date(2025, 0, 15), // January 15, 2025
+            new Date(2025, 0, 16), // January 16, 2025
+            new Date(2025, 0, 22), // January 22, 2025
+            new Date(2025, 0, 23), // January 23, 2025
+            new Date(2025, 1, 5),  // February 5, 2025
+            new Date(2025, 1, 6),  // February 6, 2025
+            new Date(2025, 1, 12), // February 12, 2025
+            new Date(2025, 1, 13), // February 13, 2025
+        ];
+
+        function renderCalendar() {
+            const calendarDays = document.getElementById('calendar-days');
+            const calendarMonth = document.getElementById('calendar-month');
+            
+            if (!calendarDays || !calendarMonth) return;
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            calendarMonth.textContent = new Date(year, month).toLocaleDateString('en-US', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            let calendarHTML = '';
+            
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const isCurrentMonth = date.getMonth() === month;
+                const isToday = date.toDateString() === new Date().toDateString();
+                const isSelected = selectedDates.some(d => d.toDateString() === date.toDateString());
+                const isUnavailable = unavailableDates.some(d => d.toDateString() === date.toDateString());
+                const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+
+                let classes = 'calendar-day text-center py-2 text-sm rounded';
+                
+                if (!isCurrentMonth) {
+                    classes += ' text-gray-300';
+                } else if (isPast) {
+                    classes += ' disabled';
+                } else if (isUnavailable) {
+                    classes += ' bg-red-200 text-red-600';
+                } else if (isSelected) {
+                    classes += ' selected';
+                } else if (isToday) {
+                    classes += ' bg-blue-100 text-blue-600 font-semibold';
+                } else {
+                    classes += ' hover:bg-blue-50';
+                }
+
+                calendarHTML += `<div class="${classes}" onclick="selectDate('${date.toISOString()}')">${date.getDate()}</div>`;
+            }
+            
+            calendarDays.innerHTML = calendarHTML;
+        }
+
+        function selectDate(dateString) {
+            const date = new Date(dateString);
+            const today = new Date(new Date().setHours(0, 0, 0, 0));
+            
+            // Don't allow selection of past dates or unavailable dates
+            if (date < today || unavailableDates.some(d => d.toDateString() === date.toDateString())) {
+                return;
+            }
+
+            const dateIndex = selectedDates.findIndex(d => d.toDateString() === date.toDateString());
+            
+            if (dateIndex > -1) {
+                selectedDates.splice(dateIndex, 1);
+            } else {
+                selectedDates.push(date);
+            }
+            
+            renderCalendar();
+            updatePrice();
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function updatePrice() {
+            const selectedPeriod = rentalPeriodSelect.value;
+            const basePrice = currentDronePrices[selectedPeriod];
+            
+            // Calculate price based on number of selected dates
+            let finalPrice = basePrice;
+            if (selectedDates.length > 1) {
+                // For multiple days, calculate daily rate
+                const dailyRate = basePrice / getDaysInPeriod(selectedPeriod);
+                finalPrice = dailyRate * selectedDates.length;
+            }
+            
+            modalPrice.textContent = `£${finalPrice.toFixed(2)}`;
+        }
+
+        function getDaysInPeriod(period) {
+            switch(period) {
+                case 'daily': return 1;
+                case 'weekend': return 2;
+                case 'weekly': return 7;
+                default: return 1;
+            }
+        }
 
         // Initialize with home page
         showPage(null, 'home');
