@@ -165,6 +165,15 @@ with st.sidebar:
     )
     st.markdown('</div>', unsafe_allow_html=True)
     
+    # Custom Report Name
+    st.subheader("📝 Report Customization")
+    custom_report_name = st.text_input(
+        "Custom Report Name (optional):",
+        value="",
+        placeholder="Enter a custom name for your report (e.g., 'Q1 2024 Analysis', 'Investor Proposal')",
+        help="This name will appear in the PDF title and filename. Leave blank to use the preset name."
+    )
+    
     # Get selected preset values
     preset_values = PRESETS[selected_preset]
     
@@ -561,6 +570,8 @@ def generate_pdf_report(results, vat_analysis, business_metrics, export_data, pr
     # Title Page
     story.append(Paragraph("🚁 AeroRent UK", title_style))
     story.append(Paragraph("Drone Rental Business Plan", title_style))
+    if preset_name and preset_name != "Proposal 1" and preset_name != "Proposal 2":
+        story.append(Paragraph(f"Report: {preset_name}", title_style))
     story.append(Spacer(1, 20))
     story.append(Paragraph(f"Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", normal_style))
     story.append(Paragraph(f"Configuration: {preset_name}", normal_style))
@@ -1679,12 +1690,19 @@ if mix_total == 100.0:
     if st.button("🚀 Generate Business Plan PDF", type="primary", help="Create a professional PDF report with all data, charts, and analysis"):
         with st.spinner("Generating comprehensive business plan PDF..."):
             try:
-                pdf_data = generate_pdf_report(results, vat_analysis, business_metrics, export_data, selected_preset)
+                # Use custom report name if provided, otherwise use preset name
+                report_name = custom_report_name.strip() if custom_report_name.strip() else selected_preset
+                pdf_data = generate_pdf_report(results, vat_analysis, business_metrics, export_data, report_name)
+                
+                # Create filename with custom name
+                safe_name = "".join(c for c in report_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                safe_name = safe_name.replace(' ', '_')
+                filename = f"aerorent_{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
                 
                 st.download_button(
                     label="📄 Download Business Plan PDF",
                     data=pdf_data,
-                    file_name=f"aerorent_business_plan_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    file_name=filename,
                     mime="application/pdf",
                     help="Download the complete business plan as a professional PDF document"
                 )
